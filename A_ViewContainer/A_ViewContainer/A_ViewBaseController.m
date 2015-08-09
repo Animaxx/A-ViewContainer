@@ -12,13 +12,40 @@
 
 @end
 
-@implementation A_ViewBaseController
+@implementation A_ViewBaseController {
+    BOOL _isInvisible;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 
+- (void)setInvisible:(BOOL)state withAnimation:(BOOL)animation {
+    if (_isInvisible == state) {
+        return;
+    }
+    
+    _isInvisible = state;
+    if (_isInvisible) {
+        if (animation) {
+            [UIView animateWithDuration:0.5f animations:^{
+                [self.view setAlpha:0.0f];
+            }];
+        } else {
+            [self.view setAlpha: 0.0f];
+        }
+    } else {
+        if (animation) {
+            [UIView animateWithDuration:0.5f animations:^{
+                [self.view setAlpha:1.0f];
+            }];
+        } else {
+            [self.view setAlpha: 1.0f];
+        }
+        
+    }
+}
 
 
 @end

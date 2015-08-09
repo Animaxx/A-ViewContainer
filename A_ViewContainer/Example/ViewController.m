@@ -26,7 +26,6 @@
     
 }
 - (void)viewDidAppear:(BOOL)animated {
-//    container = [A_MultipleViewContainer A_InstallTo:centerView controllers:@[[DemoLabelViewController createWithNumber:0],[DemoLabelViewController createWithNumber:1],[DemoLabelViewController createWithNumber:2],[DemoLabelViewController createWithNumber:3],[DemoLabelViewController createWithNumber:4]]];
     container = [A_MultipleViewContainer A_InstallTo:centerView];
     [container A_AddChild:[DemoLabelViewController createWithNumber:0]];
     [container A_AddChild:[DemoLabelViewController createWithNumber:1]];

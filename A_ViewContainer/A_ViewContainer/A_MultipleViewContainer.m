@@ -64,6 +64,16 @@
     }
 }
 
+- (CALayer *)getNextLayer {
+    return [self getNext].view.layer;
+}
+- (CALayer *)getPreviousLayer {
+    return [self getPrevious].view.layer;
+}
+- (CALayer *)getCurrentLayer {
+    return [self getCurrent].view.layer;
+}
+
 - (void)navigateToNext {
     if (_currectIndex < _subControllers.count - 1) {
         _currectIndex++;
@@ -125,6 +135,12 @@
 
 @property (atomic) BOOL needsRefresh;
 
+
+
+@property (nonatomic, retain) UIColor *fillColor;
+@property (nonatomic, retain) NSArray *framesToCutOut;
+
+
 @end
 
 @implementation A_MultipleViewContainer {
@@ -137,6 +153,8 @@
     BOOL _isAnimationRunning;
     BOOL _isSwitching;
     CGPoint _startTouchPoint;
+    
+    CADisplayLink *reverseDisplaylink;
 }
 
 - (instancetype)init {
@@ -148,6 +166,9 @@
         self.layer.masksToBounds = YES;
         _isSwitching = NO;
         _needsRefresh = YES;
+        
+        [self setFillColor:[UIColor colorWithWhite:0.0f alpha:0.8f]];
+        [self setFramesToCutOut:@[[NSValue valueWithCGRect:CGRectMake(50, 50, 10, 10)],[NSValue valueWithCGRect:CGRectMake(0, 0, 200, 200)]]];
     }
     return self;
 }
@@ -204,40 +225,8 @@
     }
 }
 
-+ (A_MultipleViewContainer *)A_InstallTo:(UIView *)container controllers:(NSArray *)controllers {
-    return [self A_InstallTo:container controllers:controllers setting:nil];
-}
-+ (A_MultipleViewContainer *)A_InstallTo:(UIView *)container controllers:(NSArray *)controllers setting:(A_ContainerSetting *)setting {
-    A_MultipleViewContainer *control = [[A_MultipleViewContainer alloc] init];
-    
-    if (setting) {
-        [control setSetting:[setting copy]];
-    } else {
-        [control setSetting:[A_ContainerSetting A_DeafultSetting]];
-    }
-    
-    [control setBackgroundColor:[UIColor yellowColor]];
-    
-    [container addSubview:control];
-    
-    if (controllers) {
-        [control.controllerManager setSubControllers:[[NSMutableArray alloc] initWithArray:controllers]];
-    }
-    
-    control.translatesAutoresizingMaskIntoConstraints = NO;
-    [control.superview addConstraint:[NSLayoutConstraint constraintWithItem:control attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:control.superview attribute:NSLayoutAttributeTop multiplier:1.0f constant:0.f]];
-    [control.superview addConstraint:[NSLayoutConstraint constraintWithItem:control attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:control.superview attribute:NSLayoutAttributeLeft multiplier:1.0f constant:0.f]];
-    [control.superview addConstraint:[NSLayoutConstraint constraintWithItem:control attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:control.superview attribute:NSLayoutAttributeRight multiplier:1.0f constant:0.f]];
-    [control.superview addConstraint:[NSLayoutConstraint constraintWithItem:control attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:control.superview attribute:NSLayoutAttributeBottom multiplier:1.0f constant:0.f]];
-    
-    [container layoutIfNeeded];
-    [control A_Display];
-    
-    return control;
-}
-
 #pragma mark - disaplying
-- (void) addController: (A_ViewBaseController *)controller {
+- (void)addController: (A_ViewBaseController *)controller {
     [self addSubview:controller.view];
     
     [controller.view setBackgroundColor:[UIColor blueColor]];
@@ -248,12 +237,20 @@
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeLeft relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeLeft multiplier:1.0f constant:0.f]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeRight multiplier:1.0f constant:0.f]];
 }
-- (void) A_Display {
+- (void)A_Display {
     _needsRefresh = NO;
+    
+    
+    [[_controllerManager getPrevious] setInvisible:YES withAnimation:NO];
+    [[_controllerManager getNext] setInvisible:YES withAnimation:NO];
+    [[_controllerManager getCurrent] setInvisible:YES withAnimation:NO];
     
     [self addController:[_controllerManager getPrevious]];
     [self addController:[_controllerManager getNext]];
     [self addController:[_controllerManager getCurrent]];
+    
+    
+    [self bringSubviewToFront:[_controllerManager getCurrent].view];
     
     [self layoutIfNeeded];
     [_controllerManager getCurrent].view.layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
@@ -265,23 +262,105 @@
     CALayer *next = [_controllerManager getNext].view.layer;
     next.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
     next.anchorPoint = CGPointMake(next.anchorPoint.x - _setting.sideDisplacement, next.anchorPoint.y);
+    
+    [[_controllerManager getPrevious] setInvisible:NO withAnimation:YES];
+    [[_controllerManager getNext] setInvisible:NO withAnimation:YES];
+    [[_controllerManager getCurrent] setInvisible:NO withAnimation:YES];
 }
 
 #pragma mark - animation methods
+- (void)moveToNext {
+    [self createNextToCenterAnimation];
+}
+- (void)moveToPrevious {
+    
+}
 
+- (CAAnimation *)createNextToCenterAnimation {
+    CALayer *next = [_controllerManager getNextLayer];
+    CAAnimationGroup *group = [CAAnimationGroup animation];
+    [group setRemovedOnCompletion: YES];
+    group.beginTime = 0.0f;
+    group.duration = 1.0f;
+    group.removedOnCompletion = NO;
+    group.fillMode = kCAFillModeBoth;
+    group.delegate = self;
+    [group setValue:@"nextToCenterAnimation" forKey:@"animationName"];
+    
+    CABasicAnimation *anchorPointAnimation = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    anchorPointAnimation.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, next.anchorPoint.y)];
+    anchorPointAnimation.additive = NO;
+    
+    CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform"];
+    scaleAnimation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1)];
+    scaleAnimation.additive = NO;
+    
+    group.animations = @[anchorPointAnimation,scaleAnimation];
+    [next addAnimation:group forKey:@"nextToCenterAnimation"];
+    
+    next.speed = 0.0f;
+    return group;
+}
+- (void)reverseAnimation {
+    if (reverseDisplaylink) {
+        [reverseDisplaylink invalidate];
+        reverseDisplaylink = nil;
+        [[_controllerManager getNextLayer] removeAnimationForKey:@"nextToCenterAnimation"];
+    }
+    
+    reverseDisplaylink = [CADisplayLink displayLinkWithTarget:self selector:@selector(reverseTimeOffset:)];
+    [reverseDisplaylink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+}
+- (void)reverseTimeOffset:(CADisplayLink *)link {
+    CALayer *next = [_controllerManager getNextLayer];
+    next.timeOffset -= 0.034;
+    
+    if (next.timeOffset <= 0.03) {
+        //TODO:
+        [reverseDisplaylink invalidate];
+        reverseDisplaylink = nil;
+        [next removeAnimationForKey:@"nextToCenterAnimation"];
+    }
+    
+    // TODO: other reverse aniamtions
+}
+
+
+
+- (void)animationDidStop:(CAAnimation *)animation finished:(BOOL)finished {
+    if (!finished) return;
+    
+    if ([[animation valueForKey:@"animationName"] isEqualToString:@"nextToCenterAnimation"]) {
+        NSLog(@"completed");
+        
+        CALayer *next = [_controllerManager getNext].view.layer;
+        next.anchorPoint = CGPointMake(0.5f, next.anchorPoint.y);
+        next.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
+        [next removeAnimationForKey:@"nextToCenterAnimation"];
+    }
+}
+#pragma mark -
 
 #pragma mark - touch event
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesBegan:touches withEvent:event];
     
     CGPoint touchPoint = [[touches anyObject] locationInView: self];
-    if ([self pointInEdgeArea:touchPoint]) {
+    
+    int touchPosition = [self pointInEdgeArea:touchPoint];
+    if (touchPosition == 1 || touchPosition == 2) {
         _startTouchPoint = touchPoint;
         _isSwitching = YES;
+        
+        if (touchPosition == 1) {
+            
+        }
+        if (touchPosition == 2) {
+            [self createNextToCenterAnimation];
+        }
     } else {
         _isSwitching = NO;
     }
-    
     
     NSLog(@"%@",[NSValue valueWithCGPoint:touchPoint]);
 }
@@ -291,11 +370,21 @@
     
     CGPoint movingTouchPoint = [[touches anyObject] locationInView: self];
     CGFloat movingDistance = _startTouchPoint.x - movingTouchPoint.x;
+    movingDistance = fabs(movingDistance);
     
-    if (fabs(movingDistance) < [self getHalfWidth]) return;
+    
+    CALayer *next = [_controllerManager getNextLayer];
+    
+    if (movingDistance > [self getHalfWidth]) {
+        //TODO: finish the animation
+        next.speed = 2.0f;
+    }
     
     if (movingDistance > 0) {
         NSLog(@"right to left");
+        next.timeOffset = movingDistance / [self getHalfWidth];
+        
+        NSLog(@"%f",next.anchorPoint.y);
     } else {
         NSLog(@"left to right");
     }
@@ -304,6 +393,7 @@
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesEnded:touches withEvent:event];
     
+    [self reverseAnimation];
     _isSwitching = NO;
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -322,11 +412,21 @@
 - (CGFloat)getRecognisingEdgeWidth {
     return self.bounds.size.width * 0.1f;
 }
-- (BOOL)pointInEdgeArea: (CGPoint)point {
+
+// return 1 - touching left; 2 - touching right;
+- (int)pointInEdgeArea: (CGPoint)point {
     CGFloat height = self.bounds.size.height;
     
-    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
-        point.y <= height * 0.9f && point.y >= height * 0.1f ;
+    if (point.y <= height * 0.9f && point.y >= height * 0.1f) {
+        if (point.x <= [self getRecognisingEdgeWidth]) {
+            return 1;
+        } else if ( point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth]) ){
+            return 2;
+        }
+    }
+    return 0;
+//    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
+//        point.y <= height * 0.9f && point.y >= height * 0.1f ;
 }
 
 @end

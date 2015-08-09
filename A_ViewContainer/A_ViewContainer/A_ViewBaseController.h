@@ -10,4 +10,6 @@
 
 @interface A_ViewBaseController : UIViewController
 
+- (void)setInvisible:(BOOL)state withAnimation:(BOOL)animation;
+
 @end
