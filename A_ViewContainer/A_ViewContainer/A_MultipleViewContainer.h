@@ -21,7 +21,7 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 #pragma mark - Container setting
 @interface A_ContainerSetting: NSObject
 
-// Scale the center controller, if set it to 1.0f means fill cover the view. Default value is .8f
+// Scale the center controller, if set it toz 1.0f means fill cover the view. Default value is .8f
 @property (nonatomic) CGFloat scaleOfCurrent;
 
 // Scale the previous and next controller. Default value is .4f

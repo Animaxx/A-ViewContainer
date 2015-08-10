@@ -21,6 +21,8 @@
 + (DemoLabelViewController *)createWithNumber:(int)number {
     DemoLabelViewController *controller = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:NSStringFromClass([self class])];
     
+    [controller.view setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:number/10]];
+    
     return controller;
 }
 

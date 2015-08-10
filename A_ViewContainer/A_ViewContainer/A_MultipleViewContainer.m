@@ -29,6 +29,25 @@
     return self;
 }
 
+- (A_ViewBaseController *)getAfterNext {
+    if (_subControllers.count == 0) return [[A_ViewBaseController alloc] init];
+    
+    NSInteger index = _currectIndex;
+    if (index < _subControllers.count - 2) {
+        index+=2;
+    }
+    else {
+        if (index < _subControllers.count - 1) {
+            index = 1;
+        } else if (_subControllers.count >= 2) {
+            index = 2;
+        } else {
+            //TODO: after next
+            return [[A_ViewBaseController alloc] init];
+        }
+    }
+    return _subControllers[index];
+}
 - (A_ViewBaseController *)getNext {
     if (_subControllers.count == 0) return [[A_ViewBaseController alloc] init];
     
@@ -53,6 +72,21 @@
     }
     return _subControllers[index];
 }
+- (A_ViewBaseController *)getAfterPrevious {
+    if (_subControllers.count == 0) return [[A_ViewBaseController alloc] init];
+    
+    NSInteger index = _currectIndex;
+    if (index > 1) {
+        index-=2;
+    }
+    else if (_subControllers.count > 2) {
+        index = _subControllers.count - 2;
+    } else {
+        //TODO: get after previous
+        return [[A_ViewBaseController alloc] init];
+    }
+    return _subControllers[index];
+}
 - (A_ViewBaseController *)getCurrent {
     if (_subControllers.count == 0) return [[A_ViewBaseController alloc] init];
     
@@ -64,11 +98,17 @@
     }
 }
 
+- (CALayer *)getAfterNextLayer {
+    return [self getAfterNext].view.layer;
+}
 - (CALayer *)getNextLayer {
     return [self getNext].view.layer;
 }
 - (CALayer *)getPreviousLayer {
     return [self getPrevious].view.layer;
+}
+- (CALayer *)getAfterPreviousLayer {
+    return [self getAfterPrevious].view.layer;
 }
 - (CALayer *)getCurrentLayer {
     return [self getCurrent].view.layer;
@@ -155,6 +195,7 @@
     CGPoint _startTouchPoint;
     
     CADisplayLink *reverseDisplaylink;
+    CADisplayLink *forwardDisplaylink;
 }
 
 - (instancetype)init {
@@ -229,8 +270,6 @@
 - (void)addController: (A_ViewBaseController *)controller {
     [self addSubview:controller.view];
     
-    [controller.view setBackgroundColor:[UIColor blueColor]];
-    
     controller.view.translatesAutoresizingMaskIntoConstraints = NO;
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTop multiplier:1.0f constant:0.f]];
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeBottom multiplier:1.0f constant:0.f]];
@@ -270,73 +309,211 @@
 
 #pragma mark - animation methods
 - (void)moveToNext {
-    [self createNextToCenterAnimation];
+    // Next to center animation
+    CALayer *next = [_controllerManager getNextLayer];
+    CAAnimationGroup *nextToCenterGroup = [CAAnimationGroup animation];
+    [nextToCenterGroup setRemovedOnCompletion: YES];
+    nextToCenterGroup.beginTime = 0.0f;
+    nextToCenterGroup.duration = 1.0f;
+    nextToCenterGroup.removedOnCompletion = NO;
+    nextToCenterGroup.fillMode = kCAFillModeBoth;
+    nextToCenterGroup.delegate = self;
+    [nextToCenterGroup setValue:@"nextToCenterAnimation" forKey:@"animationName"];
+    
+    CABasicAnimation *nextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    nextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, next.anchorPoint.y)];
+    nextAnchor.additive = NO;
+    
+    CABasicAnimation *nextScale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    nextScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1)];
+    nextScale.additive = NO;
+    
+    nextToCenterGroup.animations = @[nextAnchor,nextScale];
+    [next addAnimation:nextToCenterGroup forKey:@"nextToCenterAnimation"];
+    
+    // Center to previous
+    CALayer *current = [_controllerManager getCurrentLayer];
+    CAAnimationGroup *centerToPreviousGroup = [CAAnimationGroup animation];
+    [centerToPreviousGroup setRemovedOnCompletion: YES];
+    centerToPreviousGroup.beginTime = 0.0f;
+    centerToPreviousGroup.duration = 1.0f;
+    centerToPreviousGroup.removedOnCompletion = NO;
+    centerToPreviousGroup.fillMode = kCAFillModeBoth;
+    centerToPreviousGroup.delegate = self;
+    [centerToPreviousGroup setValue:@"centerToPreviousAnimation" forKey:@"animationName"];
+    
+    CABasicAnimation *currentAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    currentAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + _setting.sideDisplacement, current.anchorPoint.y)];
+    currentAnchor.additive = NO;
+    CABasicAnimation *currentScale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    currentScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1)];
+    currentScale.additive = NO;
+    
+    centerToPreviousGroup.animations = @[currentAnchor,currentScale];
+    [current addAnimation:centerToPreviousGroup forKey:@"centerToPreviousAnimation"];
+    
+    // Previous out
+    CALayer *previous = [_controllerManager getPreviousLayer];
+    CAAnimationGroup *previousOutGroup = [CAAnimationGroup animation];
+    [previousOutGroup setRemovedOnCompletion: YES];
+    previousOutGroup.beginTime = 0.0f;
+    previousOutGroup.duration = 1.0f;
+    previousOutGroup.removedOnCompletion = NO;
+    previousOutGroup.fillMode = kCAFillModeBoth;
+    previousOutGroup.delegate = self;
+    [previousOutGroup setValue:@"previousOutAnimation" forKey:@"animationName"];
+    
+    CABasicAnimation *previousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    previousAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + (_setting.sideDisplacement * 2.0), previous.anchorPoint.y)];
+    previousAnchor.additive = NO;
+    
+    previousOutGroup.animations = @[previousAnchor];
+    [previous addAnimation:previousOutGroup forKey:@"previousOutAnimation"];
+    
+    // change to speed
+    next.speed = .0f;
+    current.speed = .0f;
+    previous.speed = .0f;
+    
 }
 - (void)moveToPrevious {
     
 }
 
-- (CAAnimation *)createNextToCenterAnimation {
-    CALayer *next = [_controllerManager getNextLayer];
-    CAAnimationGroup *group = [CAAnimationGroup animation];
-    [group setRemovedOnCompletion: YES];
-    group.beginTime = 0.0f;
-    group.duration = 1.0f;
-    group.removedOnCompletion = NO;
-    group.fillMode = kCAFillModeBoth;
-    group.delegate = self;
-    [group setValue:@"nextToCenterAnimation" forKey:@"animationName"];
+- (void)addAfterNext {
+    [self addController:[_controllerManager getAfterNext]];
+    CALayer *afterNext = [_controllerManager getNextLayer];
+    afterNext.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+    afterNext.anchorPoint = CGPointMake(afterNext.anchorPoint.x - (_setting.sideDisplacement*2), afterNext.anchorPoint.y);
     
-    CABasicAnimation *anchorPointAnimation = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
-    anchorPointAnimation.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, next.anchorPoint.y)];
-    anchorPointAnimation.additive = NO;
+    CAAnimationGroup *afterNextGroup = [CAAnimationGroup animation];
+    [afterNextGroup setRemovedOnCompletion: YES];
+    afterNextGroup.beginTime = 0.0f;
+    afterNextGroup.duration = 0.2f;
+    afterNextGroup.removedOnCompletion = NO;
+    afterNextGroup.fillMode = kCAFillModeBoth;
+    afterNextGroup.delegate = self;
+    [afterNextGroup setValue:@"afterNextComeAnimation" forKey:@"animationName"];
     
-    CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform"];
-    scaleAnimation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1)];
-    scaleAnimation.additive = NO;
+    CABasicAnimation *afterNextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    afterNextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + (_setting.sideDisplacement * 2.0), afterNext.anchorPoint.y)];
+    afterNextAnchor.additive = NO;
     
-    group.animations = @[anchorPointAnimation,scaleAnimation];
-    [next addAnimation:group forKey:@"nextToCenterAnimation"];
-    
-    next.speed = 0.0f;
-    return group;
+    afterNextGroup.animations = @[afterNextAnchor];
+    [afterNext addAnimation:afterNextGroup forKey:@"afterNextComeAnimation"];
 }
+
+// Reverset Animations
 - (void)reverseAnimation {
+    [self clearDisplayLink:NO];
+    
+    reverseDisplaylink = [CADisplayLink displayLinkWithTarget:self selector:@selector(reversingAnimation:)];
+    [reverseDisplaylink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+}
+- (void)reversingAnimation:(CADisplayLink *)link {
+    CALayer *next = [_controllerManager getNextLayer];
+    CALayer *current = [_controllerManager getCurrentLayer];
+    CALayer *previous = [_controllerManager getPreviousLayer];
+    
+    if (next.timeOffset <= 0.03 && current.timeOffset <= 0.03 && previous.timeOffset <= 0.03 ) {
+        [self clearDisplayLink:YES];
+    }
+    
+    if (next.timeOffset > 0.034) {
+        next.timeOffset -= 0.034;
+    } else {
+        next.timeOffset = .0f;
+    }
+    if (current.timeOffset > 0.034) {
+        current.timeOffset -= 0.034;
+    } else {
+        current.timeOffset = .0f;
+    }
+    if (previous.timeOffset > 0.034) {
+        previous.timeOffset -= 0.034;
+    }else {
+        previous.timeOffset = .0f;
+    }
+}
+
+// Forard Animations
+- (void)forwardAnimation {
+    [self clearDisplayLink:NO];
+    
+    forwardDisplaylink = [CADisplayLink displayLinkWithTarget:self selector:@selector(forwardingAnimation:)];
+    [forwardDisplaylink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+}
+- (void)forwardingAnimation:(CADisplayLink *)link {
+    CALayer *next = [_controllerManager getNextLayer];
+    CALayer *current = [_controllerManager getCurrentLayer];
+    CALayer *previous = [_controllerManager getPreviousLayer];
+    
+    if (next.timeOffset >= 1.0 && current.timeOffset >= 1.0 && previous.timeOffset >= 1.0 ) {
+        [self clearDisplayLink:YES];
+    }
+    
+    if (next.timeOffset < 1.0f) {
+        next.timeOffset += 0.034;
+    } else {
+        next.timeOffset = 1.0f;
+    }
+    if (current.timeOffset < 1.0f) {
+        current.timeOffset += 0.034;
+    } else {
+        current.timeOffset = 1.0f;
+    }
+    if (previous.timeOffset < 1.0f) {
+        previous.timeOffset += 0.034;
+    }else {
+        previous.timeOffset = 1.0f;
+    }
+}
+
+// clear manual animation
+- (void)clearDisplayLink:(BOOL)removeAnimation {
     if (reverseDisplaylink) {
         [reverseDisplaylink invalidate];
         reverseDisplaylink = nil;
-        [[_controllerManager getNextLayer] removeAnimationForKey:@"nextToCenterAnimation"];
+    }
+    if (forwardDisplaylink) {
+        [forwardDisplaylink invalidate];
+        forwardDisplaylink = nil;
     }
     
-    reverseDisplaylink = [CADisplayLink displayLinkWithTarget:self selector:@selector(reverseTimeOffset:)];
-    [reverseDisplaylink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-}
-- (void)reverseTimeOffset:(CADisplayLink *)link {
-    CALayer *next = [_controllerManager getNextLayer];
-    next.timeOffset -= 0.034;
-    
-    if (next.timeOffset <= 0.03) {
-        //TODO:
-        [reverseDisplaylink invalidate];
-        reverseDisplaylink = nil;
-        [next removeAnimationForKey:@"nextToCenterAnimation"];
+    if (removeAnimation) {
+        [[_controllerManager getNextLayer] removeAllAnimations];
+        [[_controllerManager getCurrentLayer] removeAllAnimations];
+        [[_controllerManager getPreviousLayer] removeAllAnimations];
+        
+        [_controllerManager getNextLayer].speed = 1.0f;
+        [_controllerManager getCurrentLayer].speed = 1.0f;
+        [_controllerManager getPreviousLayer].speed = 1.0f;
     }
-    
-    // TODO: other reverse aniamtions
 }
 
-
+//forwardDisplaylink
 
 - (void)animationDidStop:(CAAnimation *)animation finished:(BOOL)finished {
     if (!finished) return;
     
     if ([[animation valueForKey:@"animationName"] isEqualToString:@"nextToCenterAnimation"]) {
-        NSLog(@"completed");
-        
-        CALayer *next = [_controllerManager getNext].view.layer;
-        next.anchorPoint = CGPointMake(0.5f, next.anchorPoint.y);
-        next.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
-        [next removeAnimationForKey:@"nextToCenterAnimation"];
+        CALayer *layer = [_controllerManager getNextLayer];
+        layer.anchorPoint = CGPointMake(0.5f, layer.anchorPoint.y);
+        layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
+        [layer removeAnimationForKey:@"nextToCenterAnimation"];
+    }
+    
+    if ([[animation valueForKey:@"animationName"] isEqualToString:@"centerToPreviousAnimation"]) {
+        CALayer *layer = [_controllerManager getCurrentLayer];
+        layer.anchorPoint = CGPointMake(0.5f + _setting.sideDisplacement, layer.anchorPoint.y);
+        layer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+        [layer removeAnimationForKey:@"centerToPreviousAnimation"];
+    }
+    
+    if ([[animation valueForKey:@"animationName"] isEqualToString:@"previousOutAnimation"]) {
+        CALayer *layer = [_controllerManager getCurrentLayer];
+        layer.anchorPoint = CGPointMake(0.5f + (_setting.sideDisplacement*2), layer.anchorPoint.y);
+        [layer removeAnimationForKey:@"previousOutAnimation"];
     }
 }
 #pragma mark -
@@ -352,53 +529,57 @@
         _startTouchPoint = touchPoint;
         _isSwitching = YES;
         
+        [self clearDisplayLink:YES];
         if (touchPosition == 1) {
             
         }
         if (touchPosition == 2) {
-            [self createNextToCenterAnimation];
+            [self moveToNext];
         }
     } else {
         _isSwitching = NO;
     }
-    
-    NSLog(@"%@",[NSValue valueWithCGPoint:touchPoint]);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
     if (!_isSwitching) return;
-    
-    CGPoint movingTouchPoint = [[touches anyObject] locationInView: self];
-    CGFloat movingDistance = _startTouchPoint.x - movingTouchPoint.x;
-    movingDistance = fabs(movingDistance);
-    
+
+    CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
+    CGFloat halfWidth = [self getHalfWidth];
     
     CALayer *next = [_controllerManager getNextLayer];
-    
-    if (movingDistance > [self getHalfWidth]) {
-        //TODO: finish the animation
-        next.speed = 2.0f;
-    }
+    CALayer *current = [_controllerManager getCurrentLayer];
+    CALayer *previous = [_controllerManager getPreviousLayer];
     
     if (movingDistance > 0) {
-        NSLog(@"right to left");
-        next.timeOffset = movingDistance / [self getHalfWidth];
-        
-        NSLog(@"%f",next.anchorPoint.y);
-    } else {
-        NSLog(@"left to right");
+        next.timeOffset = movingDistance / halfWidth;
+        current.timeOffset = movingDistance / halfWidth;
+        previous.timeOffset = movingDistance / halfWidth;
     }
     
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesEnded:touches withEvent:event];
+    if (!_isSwitching) return;
     
-    [self reverseAnimation];
+    CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
+    
+    if (movingDistance > [self getQuarterWidth]) {
+//        [_controllerManager getNextLayer].speed = 1.0f;
+//        [_controllerManager getCurrentLayer].speed = 1.0f;
+//        [_controllerManager getPreviousLayer].speed = 1.0f;
+        
+        [self forwardAnimation];
+    } else {
+        [self reverseAnimation];
+    }
     _isSwitching = NO;
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesCancelled:touches withEvent:event];
+    if (!_isSwitching) return;
     
+    [self reverseAnimation];
     _isSwitching = NO;
 }
 
@@ -409,6 +590,9 @@
 - (CGFloat)getHalfWidth {
     return self.bounds.size.width/2.0f;
 }
+- (CGFloat)getQuarterWidth {
+    return self.bounds.size.width/4.0f;
+}
 - (CGFloat)getRecognisingEdgeWidth {
     return self.bounds.size.width * 0.1f;
 }
@@ -417,7 +601,7 @@
 - (int)pointInEdgeArea: (CGPoint)point {
     CGFloat height = self.bounds.size.height;
     
-    if (point.y <= height * 0.9f && point.y >= height * 0.1f) {
+    if (point.y <= height * 0.8f && point.y >= height * 0.2f) {
         if (point.x <= [self getRecognisingEdgeWidth]) {
             return 1;
         } else if ( point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth]) ){
