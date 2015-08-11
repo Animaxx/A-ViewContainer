@@ -10,6 +10,7 @@
 
 @interface DemoLabelViewController : A_ViewBaseController
 
+@property (nonatomic) int numberTag;
 + (DemoLabelViewController *)createWithNumber:(int)number;
 
 @end

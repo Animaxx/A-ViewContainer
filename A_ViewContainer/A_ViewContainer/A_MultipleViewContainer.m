@@ -9,6 +9,8 @@
 #import "A_MultipleViewContainer.h"
 #import "A_ViewBaseController.h"
 
+#import "DemoLabelViewController.h"
+
 #pragma mark - Enum 
 typedef enum {
     _containerOperationType_noOperation = 0,
@@ -327,7 +329,6 @@ typedef enum {
     [nextToCenterGroup setRemovedOnCompletion: YES];
     nextToCenterGroup.beginTime = 0.0f;
     nextToCenterGroup.duration = 1.0f;
-//    nextToCenterGroup.removedOnCompletion = NO;
     nextToCenterGroup.fillMode = kCAFillModeBoth;
     
     CABasicAnimation *nextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
@@ -347,7 +348,6 @@ typedef enum {
     [centerToPreviousGroup setRemovedOnCompletion: YES];
     centerToPreviousGroup.beginTime = 0.0f;
     centerToPreviousGroup.duration = 1.0f;
-//    centerToPreviousGroup.removedOnCompletion = NO;
     centerToPreviousGroup.fillMode = kCAFillModeBoth;
     
     CABasicAnimation *currentAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
@@ -366,7 +366,6 @@ typedef enum {
     [previousOutGroup setRemovedOnCompletion: YES];
     previousOutGroup.beginTime = 0.0f;
     previousOutGroup.duration = 1.0f;
-//    previousOutGroup.removedOnCompletion = NO;
     previousOutGroup.fillMode = kCAFillModeBoth;
     
     CABasicAnimation *previousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
@@ -380,33 +379,9 @@ typedef enum {
     next.speed = .0f;
     current.speed = .0f;
     previous.speed = .0f;
-    
 }
 - (void)moveToPrevious {
     _currentOperation = _containerOperationType_moveToPrevious;
-}
-
-- (void)addAfterNext {
-    [self addController:[_controllerManager getAfterNext]];
-    CALayer *afterNext = [_controllerManager getNextLayer];
-    afterNext.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
-    afterNext.anchorPoint = CGPointMake(afterNext.anchorPoint.x - (_setting.sideDisplacement*2), afterNext.anchorPoint.y);
-    
-    CAAnimationGroup *afterNextGroup = [CAAnimationGroup animation];
-    [afterNextGroup setRemovedOnCompletion: YES];
-    afterNextGroup.beginTime = 0.0f;
-    afterNextGroup.duration = 0.2f;
-    afterNextGroup.removedOnCompletion = NO;
-    afterNextGroup.fillMode = kCAFillModeBoth;
-    afterNextGroup.delegate = self;
-    [afterNextGroup setValue:@"afterNextComeAnimation" forKey:@"animationName"];
-    
-    CABasicAnimation *afterNextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
-    afterNextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + (_setting.sideDisplacement * 2.0), afterNext.anchorPoint.y)];
-    afterNextAnchor.additive = NO;
-    
-    afterNextGroup.animations = @[afterNextAnchor];
-    [afterNext addAnimation:afterNextGroup forKey:@"afterNextComeAnimation"];
 }
 
 // Reverset Animations
@@ -493,12 +468,15 @@ typedef enum {
         [[_controllerManager getCurrentLayer] removeAllAnimations];
         [[_controllerManager getPreviousLayer] removeAllAnimations];
         
+        [_controllerManager getNextLayer].timeOffset = 0.0f;
+        [_controllerManager getCurrentLayer].timeOffset = 0.0f;
+        [_controllerManager getPreviousLayer].timeOffset = 0.0f;
+        
         [_controllerManager getNextLayer].speed = 1.0f;
         [_controllerManager getCurrentLayer].speed = 1.0f;
         [_controllerManager getPreviousLayer].speed = 1.0f;
     }
 }
-
 - (void)animationFinished {
     switch (_currentOperation) {
         case _containerOperationType_moveToNext: {
@@ -542,6 +520,7 @@ typedef enum {
                 newNextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f - _setting.sideDisplacement, newNextLayer.anchorPoint.y)];
                 newNextAnchor.beginTime = 0.0f;
                 newNextAnchor.duration = 0.1f;
+                newNextAnchor.removedOnCompletion = YES;
                 newNextAnchor.fillMode = kCAFillModeBoth;
                 [newNextLayer addAnimation:newNextAnchor forKey:nil];
             }
@@ -568,7 +547,6 @@ typedef enum {
     if (touchPosition == 1 || touchPosition == 2) {
         _startTouchPoint = touchPoint;
         _isSwitching = YES;
-        
         [self clearDisplayLink:YES];
         if (touchPosition == 1) {
             [self moveToPrevious];
@@ -592,6 +570,8 @@ typedef enum {
     CALayer *previous = [_controllerManager getPreviousLayer];
     
     if (movingDistance > 0) {
+//        NSLog(@"time offset %f",movingDistance / halfWidth);
+        
         next.timeOffset = movingDistance / halfWidth;
         current.timeOffset = movingDistance / halfWidth;
         previous.timeOffset = movingDistance / halfWidth;
@@ -605,10 +585,6 @@ typedef enum {
     CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
     
     if (movingDistance > [self getQuarterWidth]) {
-//        [_controllerManager getNextLayer].speed = 1.0f;
-//        [_controllerManager getCurrentLayer].speed = 1.0f;
-//        [_controllerManager getPreviousLayer].speed = 1.0f;
-        
         [self forwardAnimation];
     } else {
         [self reverseAnimation];

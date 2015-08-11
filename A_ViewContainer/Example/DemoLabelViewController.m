@@ -11,7 +11,6 @@
 @interface DemoLabelViewController ()
 
 @property (weak, nonatomic) IBOutlet UILabel *labelText;
-@property (nonatomic) int numberTag;
 
 @end
 
