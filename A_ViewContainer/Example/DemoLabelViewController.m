@@ -10,18 +10,22 @@
 
 @interface DemoLabelViewController ()
 
+@property (weak, nonatomic) IBOutlet UILabel *labelText;
+@property (nonatomic) int numberTag;
+
 @end
 
 @implementation DemoLabelViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self.labelText setText:[NSString stringWithFormat:@"DEMO %d", _numberTag]];
 }
 
 + (DemoLabelViewController *)createWithNumber:(int)number {
     DemoLabelViewController *controller = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:NSStringFromClass([self class])];
-    
-    [controller.view setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:number/10]];
+    controller.numberTag = number;
+    [controller.view setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:(number+1)/10.0f]];
     
     return controller;
 }

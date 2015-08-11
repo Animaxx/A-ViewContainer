@@ -9,6 +9,13 @@
 #import "A_MultipleViewContainer.h"
 #import "A_ViewBaseController.h"
 
+#pragma mark - Enum 
+typedef enum {
+    _containerOperationType_noOperation = 0,
+    _containerOperationType_moveToNext,
+    _containerOperationType_moveToPrevious,
+} _containerOperationType;
+
 #pragma mark - Controlers manager
 @interface A_ControllersManager: NSObject
 
@@ -190,9 +197,11 @@
     
     UIView *owner;
     
+    // TODO: get rid of animationRuning boolean
     BOOL _isAnimationRunning;
     BOOL _isSwitching;
     CGPoint _startTouchPoint;
+    _containerOperationType _currentOperation;
     
     CADisplayLink *reverseDisplaylink;
     CADisplayLink *forwardDisplaylink;
@@ -207,6 +216,7 @@
         self.layer.masksToBounds = YES;
         _isSwitching = NO;
         _needsRefresh = YES;
+        _currentOperation = _containerOperationType_noOperation;
         
         [self setFillColor:[UIColor colorWithWhite:0.0f alpha:0.8f]];
         [self setFramesToCutOut:@[[NSValue valueWithCGRect:CGRectMake(50, 50, 10, 10)],[NSValue valueWithCGRect:CGRectMake(0, 0, 200, 200)]]];
@@ -309,16 +319,16 @@
 
 #pragma mark - animation methods
 - (void)moveToNext {
+    _currentOperation = _containerOperationType_moveToNext;
+    
     // Next to center animation
     CALayer *next = [_controllerManager getNextLayer];
     CAAnimationGroup *nextToCenterGroup = [CAAnimationGroup animation];
     [nextToCenterGroup setRemovedOnCompletion: YES];
     nextToCenterGroup.beginTime = 0.0f;
     nextToCenterGroup.duration = 1.0f;
-    nextToCenterGroup.removedOnCompletion = NO;
+//    nextToCenterGroup.removedOnCompletion = NO;
     nextToCenterGroup.fillMode = kCAFillModeBoth;
-    nextToCenterGroup.delegate = self;
-    [nextToCenterGroup setValue:@"nextToCenterAnimation" forKey:@"animationName"];
     
     CABasicAnimation *nextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     nextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, next.anchorPoint.y)];
@@ -337,10 +347,8 @@
     [centerToPreviousGroup setRemovedOnCompletion: YES];
     centerToPreviousGroup.beginTime = 0.0f;
     centerToPreviousGroup.duration = 1.0f;
-    centerToPreviousGroup.removedOnCompletion = NO;
+//    centerToPreviousGroup.removedOnCompletion = NO;
     centerToPreviousGroup.fillMode = kCAFillModeBoth;
-    centerToPreviousGroup.delegate = self;
-    [centerToPreviousGroup setValue:@"centerToPreviousAnimation" forKey:@"animationName"];
     
     CABasicAnimation *currentAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     currentAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + _setting.sideDisplacement, current.anchorPoint.y)];
@@ -358,10 +366,8 @@
     [previousOutGroup setRemovedOnCompletion: YES];
     previousOutGroup.beginTime = 0.0f;
     previousOutGroup.duration = 1.0f;
-    previousOutGroup.removedOnCompletion = NO;
+//    previousOutGroup.removedOnCompletion = NO;
     previousOutGroup.fillMode = kCAFillModeBoth;
-    previousOutGroup.delegate = self;
-    [previousOutGroup setValue:@"previousOutAnimation" forKey:@"animationName"];
     
     CABasicAnimation *previousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     previousAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + (_setting.sideDisplacement * 2.0), previous.anchorPoint.y)];
@@ -377,7 +383,7 @@
     
 }
 - (void)moveToPrevious {
-    
+    _currentOperation = _containerOperationType_moveToPrevious;
 }
 
 - (void)addAfterNext {
@@ -449,7 +455,7 @@
     CALayer *previous = [_controllerManager getPreviousLayer];
     
     if (next.timeOffset >= 1.0 && current.timeOffset >= 1.0 && previous.timeOffset >= 1.0 ) {
-        [self clearDisplayLink:YES];
+        [self animationFinished];
     }
     
     if (next.timeOffset < 1.0f) {
@@ -474,10 +480,12 @@
     if (reverseDisplaylink) {
         [reverseDisplaylink invalidate];
         reverseDisplaylink = nil;
+        _currentOperation = _containerOperationType_noOperation;
     }
     if (forwardDisplaylink) {
         [forwardDisplaylink invalidate];
         forwardDisplaylink = nil;
+        _currentOperation = _containerOperationType_noOperation;
     }
     
     if (removeAnimation) {
@@ -491,31 +499,63 @@
     }
 }
 
-//forwardDisplaylink
-
-- (void)animationDidStop:(CAAnimation *)animation finished:(BOOL)finished {
-    if (!finished) return;
-    
-    if ([[animation valueForKey:@"animationName"] isEqualToString:@"nextToCenterAnimation"]) {
-        CALayer *layer = [_controllerManager getNextLayer];
-        layer.anchorPoint = CGPointMake(0.5f, layer.anchorPoint.y);
-        layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
-        [layer removeAnimationForKey:@"nextToCenterAnimation"];
-    }
-    
-    if ([[animation valueForKey:@"animationName"] isEqualToString:@"centerToPreviousAnimation"]) {
-        CALayer *layer = [_controllerManager getCurrentLayer];
-        layer.anchorPoint = CGPointMake(0.5f + _setting.sideDisplacement, layer.anchorPoint.y);
-        layer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
-        [layer removeAnimationForKey:@"centerToPreviousAnimation"];
-    }
-    
-    if ([[animation valueForKey:@"animationName"] isEqualToString:@"previousOutAnimation"]) {
-        CALayer *layer = [_controllerManager getCurrentLayer];
-        layer.anchorPoint = CGPointMake(0.5f + (_setting.sideDisplacement*2), layer.anchorPoint.y);
-        [layer removeAnimationForKey:@"previousOutAnimation"];
+- (void)animationFinished {
+    switch (_currentOperation) {
+        case _containerOperationType_moveToNext: {
+            // Stop next to center animation
+            CALayer *nextLayer = [_controllerManager getNextLayer];
+            nextLayer.anchorPoint = CGPointMake(0.5f, nextLayer.anchorPoint.y);
+            nextLayer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
+            [nextLayer removeAnimationForKey:@"nextToCenterAnimation"];
+            
+            // Stop center to previous animation
+            CALayer *currentLayer = [_controllerManager getCurrentLayer];
+            currentLayer.anchorPoint = CGPointMake(0.5f + _setting.sideDisplacement, currentLayer.anchorPoint.y);
+            currentLayer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+            [currentLayer removeAnimationForKey:@"centerToPreviousAnimation"];
+            
+            // Stop previous out animation
+            CALayer *previousOutLayer = [_controllerManager getPreviousLayer];
+            previousOutLayer.anchorPoint = CGPointMake(0.5f - (_setting.sideDisplacement*2), previousOutLayer.anchorPoint.y);
+            [previousOutLayer removeAnimationForKey:@"previousOutAnimation"];
+            
+            // Remoe previous
+            A_ViewBaseController *outPrevious = [_controllerManager getPrevious];
+            [outPrevious.view removeFromSuperview];
+            
+            [self clearDisplayLink:YES];
+            
+            // Bring new next controller
+            [_controllerManager navigateToNext];
+            [self addController:[_controllerManager getNext]];
+            
+            CALayer *newNextLayer = [_controllerManager getNextLayer];
+            newNextLayer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+            newNextLayer.anchorPoint = CGPointMake(0.5f - _setting.sideDisplacement*2, newNextLayer.anchorPoint.y);
+            
+            [CATransaction begin]; {
+                [CATransaction setCompletionBlock:^{
+                    newNextLayer.anchorPoint = CGPointMake(newNextLayer.anchorPoint.x + _setting.sideDisplacement, newNextLayer.anchorPoint.y);
+                }];
+                
+                CABasicAnimation *newNextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+                newNextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f - _setting.sideDisplacement, newNextLayer.anchorPoint.y)];
+                newNextAnchor.beginTime = 0.0f;
+                newNextAnchor.duration = 0.1f;
+                newNextAnchor.fillMode = kCAFillModeBoth;
+                [newNextLayer addAnimation:newNextAnchor forKey:nil];
+            }
+            [CATransaction commit];
+        }
+            break;
+        case _containerOperationType_moveToPrevious:
+            
+            break;
+        default:
+            break;
     }
 }
+
 #pragma mark -
 
 #pragma mark - touch event
@@ -531,7 +571,7 @@
         
         [self clearDisplayLink:YES];
         if (touchPosition == 1) {
-            
+            [self moveToPrevious];
         }
         if (touchPosition == 2) {
             [self moveToNext];
