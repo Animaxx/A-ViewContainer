@@ -279,8 +279,12 @@ typedef enum {
 }
 
 #pragma mark - disaplying
-- (void)addController: (A_ViewBaseController *)controller {
-    [self addSubview:controller.view];
+- (void)addController: (A_ViewBaseController *)controller underCurrentView:(BOOL)under{
+    if (under) {
+        [self insertSubview:controller.view belowSubview:[_controllerManager getCurrent].view];
+    } else {
+        [self addSubview:controller.view];
+    }
     
     controller.view.translatesAutoresizingMaskIntoConstraints = NO;
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeTop multiplier:1.0f constant:0.f]];
@@ -296,10 +300,9 @@ typedef enum {
     [[_controllerManager getNext] setInvisible:YES withAnimation:NO];
     [[_controllerManager getCurrent] setInvisible:YES withAnimation:NO];
     
-    [self addController:[_controllerManager getPrevious]];
-    [self addController:[_controllerManager getNext]];
-    [self addController:[_controllerManager getCurrent]];
-    
+    [self addController:[_controllerManager getPrevious] underCurrentView:NO];
+    [self addController:[_controllerManager getNext] underCurrentView:NO];
+    [self addController:[_controllerManager getCurrent] underCurrentView:NO];
     
     [self bringSubviewToFront:[_controllerManager getCurrent].view];
     
@@ -322,6 +325,9 @@ typedef enum {
 #pragma mark - animation methods
 - (void)moveToNext {
     _currentOperation = _containerOperationType_moveToNext;
+    
+    // Bring the next view to the front
+    [self bringSubviewToFront:[_controllerManager getNext].view];
     
     // Next to center animation
     CALayer *next = [_controllerManager getNextLayer];
@@ -382,11 +388,72 @@ typedef enum {
 }
 - (void)moveToPrevious {
     _currentOperation = _containerOperationType_moveToPrevious;
+    
+    // Bring the next view to the front
+    [self bringSubviewToFront:[_controllerManager getNext].view];
+    
+    // Previous to center animation
+    CALayer *previous = [_controllerManager getPreviousLayer];
+    CAAnimationGroup *previousToCenterGroup = [CAAnimationGroup animation];
+    [previousToCenterGroup setRemovedOnCompletion: YES];
+    previousToCenterGroup.beginTime = 0.0f;
+    previousToCenterGroup.duration = 1.0f;
+    previousToCenterGroup.fillMode = kCAFillModeBoth;
+    
+    CABasicAnimation *previousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    previousAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, previous.anchorPoint.y)];
+    previousAnchor.additive = NO;
+    
+    CABasicAnimation *previousScale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    previousScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1)];
+    previousScale.additive = NO;
+    
+    previousToCenterGroup.animations = @[previousAnchor,previousScale];
+    [previous addAnimation:previousToCenterGroup forKey:@"previousToCenterAnimation"];
+    
+    // Center to next
+    CALayer *current = [_controllerManager getCurrentLayer];
+    CAAnimationGroup *centerToNextGroup = [CAAnimationGroup animation];
+    [centerToNextGroup setRemovedOnCompletion: YES];
+    centerToNextGroup.beginTime = 0.0f;
+    centerToNextGroup.duration = 1.0f;
+    centerToNextGroup.fillMode = kCAFillModeBoth;
+    
+    CABasicAnimation *currentAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    currentAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f - _setting.sideDisplacement, current.anchorPoint.y)];
+    currentAnchor.additive = NO;
+    CABasicAnimation *currentScale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    currentScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1)];
+    currentScale.additive = NO;
+    
+    centerToNextGroup.animations = @[currentAnchor,currentScale];
+    [current addAnimation:centerToNextGroup forKey:@"centerToNextAnimation"];
+    
+    // Next out
+    CALayer *next = [_controllerManager getNextLayer];
+    CAAnimationGroup *nextOutGroup = [CAAnimationGroup animation];
+    [nextOutGroup setRemovedOnCompletion: YES];
+    nextOutGroup.beginTime = 0.0f;
+    nextOutGroup.duration = 1.0f;
+    nextOutGroup.fillMode = kCAFillModeBoth;
+    
+    CABasicAnimation *nextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+    nextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f - (_setting.sideDisplacement * 2.0), previous.anchorPoint.y)];
+    nextAnchor.additive = NO;
+    
+    nextOutGroup.animations = @[nextAnchor];
+    [next addAnimation:nextOutGroup forKey:@"nextOutAnimation"];
+    
+    // change to speed
+    next.speed = .0f;
+    current.speed = .0f;
+    previous.speed = .0f;
 }
 
 // Reverset Animations
 - (void)reverseAnimation {
     [self clearDisplayLink:NO];
+    [self bringSubviewToFront:[_controllerManager getCurrent].view];
     
     reverseDisplaylink = [CADisplayLink displayLinkWithTarget:self selector:@selector(reversingAnimation:)];
     [reverseDisplaylink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
@@ -497,7 +564,7 @@ typedef enum {
             previousOutLayer.anchorPoint = CGPointMake(0.5f - (_setting.sideDisplacement*2), previousOutLayer.anchorPoint.y);
             [previousOutLayer removeAnimationForKey:@"previousOutAnimation"];
             
-            // Remoe previous
+            // Removes previous
             A_ViewBaseController *outPrevious = [_controllerManager getPrevious];
             [outPrevious.view removeFromSuperview];
             
@@ -505,7 +572,7 @@ typedef enum {
             
             // Bring new next controller
             [_controllerManager navigateToNext];
-            [self addController:[_controllerManager getNext]];
+            [self addController:[_controllerManager getNext] underCurrentView:YES];
             
             CALayer *newNextLayer = [_controllerManager getNextLayer];
             newNextLayer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
@@ -527,8 +594,54 @@ typedef enum {
             [CATransaction commit];
         }
             break;
-        case _containerOperationType_moveToPrevious:
+        case _containerOperationType_moveToPrevious: {
+            // Stop previous to center animation
+            CALayer *previousLayer = [_controllerManager getPreviousLayer];
+            previousLayer.anchorPoint = CGPointMake(0.5f, previousLayer.anchorPoint.y);
+            previousLayer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
+            [previousLayer removeAnimationForKey:@"previousToCenterAnimation"];
             
+            // Stop center to previous animation
+            CALayer *currentLayer = [_controllerManager getCurrentLayer];
+            currentLayer.anchorPoint = CGPointMake(0.5f - _setting.sideDisplacement, currentLayer.anchorPoint.y);
+            currentLayer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+            [currentLayer removeAnimationForKey:@"centerToPreviousAnimation"];
+            
+            // Stop next out animation
+            CALayer *nextOutLayer = [_controllerManager getNextLayer];
+            nextOutLayer.anchorPoint = CGPointMake(0.5f + (_setting.sideDisplacement*2), nextOutLayer.anchorPoint.y);
+            [nextOutLayer removeAnimationForKey:@"nextOutAnimation"];
+            
+            // Remove next
+            A_ViewBaseController *outNext = [_controllerManager getNext];
+            [outNext.view removeFromSuperview];
+
+            [self clearDisplayLink:YES];
+            
+            // Bring new previous controller
+            [_controllerManager naviageToPrevious];
+            [self addController:[_controllerManager getPrevious] underCurrentView:YES];
+            
+            CALayer *newPreviousLayer = [_controllerManager getPreviousLayer];
+            newPreviousLayer.transform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+            newPreviousLayer.anchorPoint = CGPointMake(0.5f + _setting.sideDisplacement*2, newPreviousLayer.anchorPoint.y);
+
+            [CATransaction begin]; {
+                [CATransaction setCompletionBlock:^{
+                    newPreviousLayer.anchorPoint = CGPointMake(newPreviousLayer.anchorPoint.x - _setting.sideDisplacement, newPreviousLayer.anchorPoint.y);
+                }];
+                
+                CABasicAnimation *newPreviousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
+                newPreviousAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + _setting.sideDisplacement, newPreviousLayer.anchorPoint.y)];
+                newPreviousAnchor.beginTime = 0.0f;
+                newPreviousAnchor.duration = 0.1f;
+                newPreviousAnchor.removedOnCompletion = YES;
+                newPreviousAnchor.fillMode = kCAFillModeBoth;
+                [newPreviousLayer addAnimation:newPreviousAnchor forKey:nil];
+            }
+            [CATransaction commit];
+            
+        }
             break;
         default:
             break;

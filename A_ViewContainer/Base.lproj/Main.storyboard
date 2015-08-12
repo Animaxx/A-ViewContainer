@@ -18,16 +18,16 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qub-Td-jcN">
-                                <rect key="frame" x="40" y="40" width="520" height="520"/>
+                                <rect key="frame" x="20" y="0.0" width="560" height="520"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="qub-Td-jcN" secondAttribute="bottom" constant="40" id="6oD-zD-m84"/>
-                            <constraint firstAttribute="trailing" secondItem="qub-Td-jcN" secondAttribute="trailing" constant="40" id="Jlx-jA-qiO"/>
-                            <constraint firstItem="qub-Td-jcN" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="40" id="igc-lq-REg"/>
-                            <constraint firstItem="qub-Td-jcN" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="40" id="ynt-KY-7K6"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="qub-Td-jcN" secondAttribute="bottom" constant="80" id="6oD-zD-m84"/>
+                            <constraint firstAttribute="trailing" secondItem="qub-Td-jcN" secondAttribute="trailing" constant="20" id="Jlx-jA-qiO"/>
+                            <constraint firstItem="qub-Td-jcN" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="igc-lq-REg"/>
+                            <constraint firstItem="qub-Td-jcN" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="20" id="ynt-KY-7K6"/>
                         </constraints>
                     </view>
                     <connections>
