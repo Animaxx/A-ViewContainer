@@ -8,8 +8,21 @@
 
 #import <UIKit/UIKit.h>
 
+@class A_ContainerSetting;
+
+typedef enum {
+    A_ControllerDirectionToLeft         = 0,
+    A_ControllerDirectionToRight        = 1,
+} A_ControllerDirectionEnum;
+
 @interface A_ViewBaseController : UIViewController
 
-- (void)setInvisible:(BOOL)state withAnimation:(BOOL)animation;
+#pragma mark - Override
+- (void)A_ViewWillAppearInCenter;
+- (void)A_ViewDIdAppearInCenter;
+
+- (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
+- (NSArray *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
+- (NSArray *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
 
 @end

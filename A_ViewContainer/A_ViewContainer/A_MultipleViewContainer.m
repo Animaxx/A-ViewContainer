@@ -9,9 +9,7 @@
 #import "A_MultipleViewContainer.h"
 #import "A_ViewBaseController.h"
 
-#import "DemoLabelViewController.h"
 
-#pragma mark - Enum 
 typedef enum {
     _containerOperationType_noOperation = 0,
     _containerOperationType_moveToNext,
@@ -176,6 +174,14 @@ typedef enum {
 
 @end
 
+
+#pragma mark - Multiple View Container
+@interface A_ViewBaseController()
+
+- (void)setInvisible:(BOOL)state withAnimation:(BOOL)animation;
+
+@end
+
 #pragma mark - Multiple View Container
 @interface A_MultipleViewContainer () <UIGestureRecognizerDelegate>
 
@@ -184,13 +190,12 @@ typedef enum {
 
 @property (atomic) BOOL needsRefresh;
 
-
-
 @property (nonatomic, retain) UIColor *fillColor;
 @property (nonatomic, retain) NSArray *framesToCutOut;
 
-
 @end
+
+
 
 @implementation A_MultipleViewContainer {
     NSLayoutConstraint *_leftPosition;
@@ -325,6 +330,8 @@ typedef enum {
 #pragma mark - animation methods
 - (void)moveToNext {
     _currentOperation = _containerOperationType_moveToNext;
+    NSMutableArray *animations = [[NSMutableArray alloc] init];
+    NSArray *extraAnimations;
     
     // Bring the next view to the front
     [self bringSubviewToFront:[_controllerManager getNext].view];
@@ -340,13 +347,20 @@ typedef enum {
     CABasicAnimation *nextAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     nextAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f, next.anchorPoint.y)];
     nextAnchor.additive = NO;
+    [animations addObject:nextAnchor];
     
     CABasicAnimation *nextScale = [CABasicAnimation animationWithKeyPath:@"transform"];
     nextScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1)];
-    nextScale.additive = NO;
+    [animations addObject:nextScale];
     
-    nextToCenterGroup.animations = @[nextAnchor,nextScale];
+    extraAnimations = [[_controllerManager getNext] A_ExtraSideToCenterAnimation:_setting direction:A_ControllerDirectionToLeft];
+    if (extraAnimations && [extraAnimations isKindOfClass:[NSArray class]] && extraAnimations.count > 0) {
+        [animations addObjectsFromArray:extraAnimations];
+    }
+    
+    nextToCenterGroup.animations = animations.copy;
     [next addAnimation:nextToCenterGroup forKey:@"nextToCenterAnimation"];
+    [animations removeAllObjects];
     
     // Center to previous
     CALayer *current = [_controllerManager getCurrentLayer];
@@ -359,12 +373,28 @@ typedef enum {
     CABasicAnimation *currentAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     currentAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + _setting.sideDisplacement, current.anchorPoint.y)];
     currentAnchor.additive = NO;
-    CABasicAnimation *currentScale = [CABasicAnimation animationWithKeyPath:@"transform"];
-    currentScale.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1)];
-    currentScale.additive = NO;
+    [animations addObject:currentAnchor];
     
-    centerToPreviousGroup.animations = @[currentAnchor,currentScale];
+    CABasicAnimation *currentScale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    CATransform3D currentScaleTransform = CATransform3DMakeScale(_setting.scaleOfEdge, _setting.scaleOfEdge, 1);
+    
+    extraAnimations = [[_controllerManager getCurrent] A_ExtraCenterToSideAnimation:_setting direction:A_ControllerDirectionToLeft];
+    if (extraAnimations && [extraAnimations isKindOfClass:[NSArray class]] && extraAnimations.count > 0) {
+        [animations addObjectsFromArray:extraAnimations];
+    }
+    
+    // TODO: Test Rotate
+//    currentScaleTransform = CATransform3DRotate(currentScaleTransform, -60*M_PI/180.0, 0.0, 1.0, 0);
+//    currentScale.toValue = [NSValue valueWithCATransform3D:currentScaleTransform];
+//    currentScale.additive = NO;
+//    [animations addObject:currentScale];
+    
+    // TODO: Blur test
+    
+    
+    centerToPreviousGroup.animations = animations.copy;
     [current addAnimation:centerToPreviousGroup forKey:@"centerToPreviousAnimation"];
+    [animations removeAllObjects];
     
     // Previous out
     CALayer *previous = [_controllerManager getPreviousLayer];
@@ -377,8 +407,14 @@ typedef enum {
     CABasicAnimation *previousAnchor = [CABasicAnimation animationWithKeyPath:@"anchorPoint"];
     previousAnchor.toValue = [NSValue valueWithCGPoint:CGPointMake(0.5f + (_setting.sideDisplacement * 2.0), previous.anchorPoint.y)];
     previousAnchor.additive = NO;
+    [animations addObject:previousAnchor];
     
-    previousOutGroup.animations = @[previousAnchor];
+    extraAnimations = [[_controllerManager getPrevious] A_ExtraSideToOutAnimation:_setting direction:A_ControllerDirectionToLeft];
+    if (extraAnimations && [extraAnimations isKindOfClass:[NSArray class]] && extraAnimations.count > 0) {
+        [animations addObjectsFromArray:extraAnimations];
+    }
+    
+    previousOutGroup.animations = animations.copy;
     [previous addAnimation:previousOutGroup forKey:@"previousOutAnimation"];
     
     // change to speed
