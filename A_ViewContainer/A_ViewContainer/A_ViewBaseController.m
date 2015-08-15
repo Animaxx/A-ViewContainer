@@ -59,6 +59,67 @@
 }
 
 #pragma mark - lift cycle
+- (NSDictionary *)centerToSideAttributes: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary *animationSet = [[NSMutableDictionary alloc] init];
+    
+    switch (direction) {
+        case A_ControllerDirectionToLeft:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f + setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        case A_ControllerDirectionToRight:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f - setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        default:
+            break;
+    }
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+    
+    return animationSet;
+}
+- (NSDictionary *)sideToCenterAttributes: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary *animationSet = [[NSMutableDictionary alloc] init];
+
+    [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfCurrent, setting.scaleOfCurrent, 1)] forKey:@"transform"];
+
+    return animationSet;
+}
+- (NSDictionary *)sideToOutAttributes: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary *animationSet = [[NSMutableDictionary alloc] init];
+    
+    switch (direction) {
+        case A_ControllerDirectionToLeft:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f + (setting.sideDisplacement * 2.0), self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        case A_ControllerDirectionToRight:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f - (setting.sideDisplacement * 2.0), self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        default:
+            break;
+    }
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+    
+    return animationSet;
+}
+- (NSDictionary *)newSideAttributes: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary *animationSet = [[NSMutableDictionary alloc] init];
+    
+    switch (direction) {
+        case A_ControllerDirectionToLeft:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f - setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        case A_ControllerDirectionToRight:
+            [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f + setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
+            break;
+        default:
+            break;
+    }
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+    
+    return animationSet;
+}
+
+
 - (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
     return @[];
 }
@@ -70,6 +131,7 @@
 }
 
 //TODO: Operation for finished animation
+
 
 #pragma mark - Override
 - (void)A_ViewWillAppearInCenter {
