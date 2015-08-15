@@ -230,8 +230,9 @@ typedef enum {
         _needsRefresh = YES;
         _currentOperation = _containerOperationType_noOperation;
         
-        [self setFillColor:[UIColor colorWithWhite:0.0f alpha:0.8f]];
-        [self setFramesToCutOut:@[[NSValue valueWithCGRect:CGRectMake(50, 50, 10, 10)],[NSValue valueWithCGRect:CGRectMake(0, 0, 200, 200)]]];
+        [self setBackgroundColor:[UIColor clearColor]];
+//        [self setFillColor:[UIColor colorWithWhite:0.0f alpha:0.8f]];
+//        [self setFramesToCutOut:@[[NSValue valueWithCGRect:CGRectMake(50, 50, 10, 10)],[NSValue valueWithCGRect:CGRectMake(0, 0, 200, 200)]]];
     }
     return self;
 }
@@ -247,8 +248,6 @@ typedef enum {
     } else {
         [control setSetting:[A_ContainerSetting A_DeafultSetting]];
     }
-    
-    [control setBackgroundColor:[UIColor yellowColor]];
     
     [container addSubview:control];
     
@@ -334,6 +333,7 @@ typedef enum {
 
 #pragma mark - animation methods
 - (void)moveToNext {
+    
     _currentOperation = _containerOperationType_moveToNext;
     
     // Bring the next view to the front
@@ -587,19 +587,24 @@ typedef enum {
     if (!_isSwitching) return;
 
     CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
+    if (movingDistance <=0) return;
+    
     CGFloat halfWidth = [self getHalfWidth];
+    if (movingDistance > halfWidth) {
+        [self forwardAnimation];
+        _isSwitching = NO;
+        return;
+    }
     
     CALayer *next = [_controllerManager getNextLayer];
     CALayer *current = [_controllerManager getCurrentLayer];
     CALayer *previous = [_controllerManager getPreviousLayer];
     
-    if (movingDistance > 0) {
-//        NSLog(@"time offset %f",movingDistance / halfWidth);
-        
-        next.timeOffset = movingDistance / halfWidth;
-        current.timeOffset = movingDistance / halfWidth;
-        previous.timeOffset = movingDistance / halfWidth;
-    }
+    CGFloat progress = movingDistance / (halfWidth + [self getQuarterWidth]);
+    
+    next.timeOffset = progress;
+    current.timeOffset = progress;
+    previous.timeOffset = progress;
     
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -681,6 +686,191 @@ typedef enum {
 //    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
 //        point.y <= height * 0.9f && point.y >= height * 0.1f ;
 }
+
+
+#pragma mark - Bounce animation
+// From A_Animation in A_IOSHelper project
+typedef double(^viewContainerKeyframeCalculatingBlock)(double t, double b, double c, double d);
++(CAKeyframeAnimation*)setBounceKeyframe:(NSString*)keypath Duration:(double)duration Start:(id)start End:(id)end {
+    CAKeyframeAnimation *animation = [CAKeyframeAnimation animationWithKeyPath:keypath];
+    animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+    animation.duration = duration;
+    NSInteger steps = duration * 60;
+    
+    if ([start isKindOfClass:NSNumber.class] && [end isKindOfClass:NSNumber.class]) {
+        animation.values = [self _getFloatValues:steps Start:[start doubleValue] End:[end doubleValue]];
+    } else if (CFGetTypeID((__bridge CFTypeRef)start) == CGColorGetTypeID()) {
+        CGColorRef endColor;
+        if ([end isKindOfClass:[UIColor class]]) {
+            endColor = ((UIColor*)end).CGColor;
+        } else {
+            endColor = (__bridge CGColorRef)end;
+        }
+        animation.values = [self _getColorValues:steps Start:(CGColorRef)start End:endColor];
+    } else if (([start isKindOfClass:NSValue.class] && [end isKindOfClass:NSValue.class]) && strcmp([start objCType], [end  objCType]) == 0) {
+        if (strcmp([start objCType], @encode(CATransform3D)) == 0) {
+            animation.values = [self _getCATransform3DValues:steps Start:[start CATransform3DValue] End:[end CATransform3DValue]];
+        }
+        if (strcmp([start objCType], @encode(CGRect)) == 0) {
+            animation.values = [self _getRectValues:steps Start:[start CGRectValue] End:[end CGRectValue]];
+        }
+        if (strcmp([start objCType], @encode(CGPoint)) == 0) {
+            animation.values = [self _getPointValues:steps Start:[start CGPointValue] End:[end CGPointValue]];
+        }
+        if (strcmp([start objCType], @encode(CGSize)) == 0) {
+            animation.values = [self _getSizeValues:steps Start:[start CGSizeValue] End:[end CGSizeValue]];
+        }
+    }
+    
+    
+    return animation;
+}
++(NSArray*)_getFloatValues:(NSInteger)steps Start:(CGFloat)start End:(CGFloat)end {
+    
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    double _v = 0.0;
+    for (int i=0; i<steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        [_values addObject:@(start + (_v / 100.0) * (end - start))];
+    }
+    
+    return _values;
+}
++(NSArray*)_getPointValues:(NSInteger)steps Start:(CGPoint)start End:(CGPoint)end {
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    double _v = 0.0;
+    for (int i=0; i<steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        
+        CGPoint point = {
+            .x = start.x + (_v / 100.0) * (end.x - start.x),
+            .y = start.y + (_v / 100.0) * (end.y - start.y),
+        };
+        [_values addObject:[NSValue valueWithCGPoint:point]];
+    }
+    
+    return _values;
+}
++(NSArray*)_getSizeValues:(NSInteger)steps Start:(CGSize)start End:(CGSize)end {
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    double _v = 0.0;
+    for (int i=0; i<steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        
+        CGSize size = {
+            .width = start.width + (_v / 100.0) * (end.width - start.width),
+            .height  = start.height + (_v / 100.0) * (end.height - start.height),
+        };
+        [_values addObject:[NSValue valueWithCGSize:size]];
+    }
+    
+    return _values;
+}
++(NSArray*)_getRectValues:(NSInteger)steps Start:(CGRect)start End:(CGRect)end {
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    double _v = 0.0;
+    for (int i=0; i<steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        
+        CGRect rect = {
+            .origin.x = start.origin.x + (_v / 100.0) * (end.origin.x - start.origin.x),
+            .origin.y = start.origin.y + (_v / 100.0) * (end.origin.y - start.origin.y),
+            .size.width = start.size.width + (_v / 100.0) * (end.size.width - start.size.width),
+            .size.height = start.size.height + (_v / 100.0) * (end.size.height - start.size.height),
+        };
+        [_values addObject:[NSValue valueWithCGRect:rect]];
+    }
+    
+    return _values;
+}
++(NSArray*)_getColorValues:(NSInteger)steps Start:(CGColorRef)start End:(CGColorRef)end {
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    const CGFloat* startColors = CGColorGetComponents( start );
+    const CGFloat* endColors = CGColorGetComponents( end );
+    
+    
+    double _v = 0.0;
+    for (NSInteger i = 1; i < steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        
+        UIColor *color = [UIColor
+                          colorWithRed:(startColors[0] + (_v / 100.0) * (endColors[0] - startColors[0]))
+                          green:(startColors[1] + (_v / 100.0) * (endColors[1] - startColors[1]))
+                          blue:(startColors[2] + (_v / 100.0) * (endColors[2] - startColors[2]))
+                          alpha:(startColors[3] + (_v / 100.0) * (endColors[3] - startColors[3]))];
+        [_values addObject:(id)color.CGColor];
+    }
+    return _values;
+}
++(NSArray*)_getCATransform3DValues:(NSInteger)steps Start:(CATransform3D)start End:(CATransform3D)end {
+    viewContainerKeyframeCalculatingBlock _calculatingBlock = ^double(double t, double b, double c, double d) {
+        double a = log2f(3.0f/fabs(b-c))/d;
+        if (a>0) a = -1.0f*a;
+        return (b-c)*pow(2.71, a*t)*cos(6.0*M_PI/d*t)+c;
+    };
+    NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
+    
+    double _v = 0.0;
+    for (int i=0; i<steps; i++) {
+        _v = _calculatingBlock((double)(steps * 1.0 / (double)(steps) * i), 0.0, 100.0, (double)steps);
+        
+        CATransform3D transform3d = {
+            .m11 = start.m11 + (_v / 100.0) * (end.m11 - start.m11),
+            .m12 = start.m12 + (_v / 100.0) * (end.m12 - start.m12),
+            .m13 = start.m13 + (_v / 100.0) * (end.m13 - start.m13),
+            .m14 = start.m14 + (_v / 100.0) * (end.m14 - start.m14),
+            .m21 = start.m21 + (_v / 100.0) * (end.m21 - start.m21),
+            .m22 = start.m22 + (_v / 100.0) * (end.m22 - start.m22),
+            .m23 = start.m23 + (_v / 100.0) * (end.m23 - start.m23),
+            .m24 = start.m24 + (_v / 100.0) * (end.m24 - start.m24),
+            .m31 = start.m31 + (_v / 100.0) * (end.m31 - start.m31),
+            .m32 = start.m32 + (_v / 100.0) * (end.m32 - start.m32),
+            .m33 = start.m33 + (_v / 100.0) * (end.m33 - start.m33),
+            .m34 = start.m34 + (_v / 100.0) * (end.m34 - start.m34),
+            .m41 = start.m41 + (_v / 100.0) * (end.m41 - start.m41),
+            .m42 = start.m42 + (_v / 100.0) * (end.m42 - start.m42),
+            .m43 = start.m43 + (_v / 100.0) * (end.m43 - start.m43),
+            .m44 = start.m44 + (_v / 100.0) * (end.m44 - start.m44),
+        };
+        [_values addObject:[NSValue valueWithCATransform3D:transform3d]];
+    }
+    
+    return _values;
+}
+
+
 
 @end
 

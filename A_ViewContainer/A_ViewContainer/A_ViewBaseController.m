@@ -119,7 +119,6 @@
     return animationSet;
 }
 
-
 - (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
     return @[];
 }
@@ -129,9 +128,6 @@
 - (NSArray *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
     return @[];
 }
-
-//TODO: Operation for finished animation
-
 
 #pragma mark - Override
 - (void)A_ViewWillAppearInCenter {

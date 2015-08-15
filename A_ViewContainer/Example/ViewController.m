@@ -25,7 +25,15 @@
     [super viewDidLoad];
     
 }
+- (BOOL)prefersStatusBarHidden {
+    return YES;
+}
+
 - (void)viewDidAppear:(BOOL)animated {
+    centerView.layer.cornerRadius = 16.0f;
+    centerView.layer.borderColor = [UIColor blackColor].CGColor;
+    centerView.layer.borderWidth = 1.0f;
+    
     container = [A_MultipleViewContainer A_InstallTo:centerView];
     [container A_AddChild:[DemoLabelViewController createWithNumber:0]];
     [container A_AddChild:[DemoLabelViewController createWithNumber:1]];
