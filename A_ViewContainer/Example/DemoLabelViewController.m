@@ -34,5 +34,11 @@
     return controller;
 }
 
+- (void)A_ViewDidAppearInCenter {
+    [super A_ViewDidAppearInCenter];
+    
+    self.view.layer.cornerRadius = self.view.bounds.size.width / 2.0f;
+    self.view.layer.masksToBounds = YES;
+}
 
 @end

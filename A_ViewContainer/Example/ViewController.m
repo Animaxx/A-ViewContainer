@@ -35,16 +35,13 @@
     centerView.layer.borderWidth = 1.0f;
     
     A_ContainerSetting *setting = [A_ContainerSetting A_DeafultSetting];
-//    [setting addStyle:A_MultipleViewStyleBounce];
-//    [setting addStyle:A_MultipleViewStyleRotate];
     
     container = [A_MultipleViewContainer A_InstallTo:centerView setting:setting];
     [container A_AddChild:[DemoLabelViewController createWithNumber:0]];
     [container A_AddChild:[DemoLabelViewController createWithNumber:1]];
     [container A_AddChild:[DemoLabelViewController createWithNumber:2]];
     [container A_AddChild:[DemoLabelViewController createWithNumber:3]];
-//    [container A_AddChild:[DemoLabelViewController createWithNumber:4]];
-//    [container A_AddChild:[DemoLabelViewController createWithNumber:5]];
+    [container A_AddChild:[DemoLabelViewController createWithNumber:4]];
 }
 
 

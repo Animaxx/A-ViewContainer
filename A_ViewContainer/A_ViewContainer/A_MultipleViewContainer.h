@@ -30,8 +30,7 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 @property (nonatomic) CGFloat sideDisplacement;
 
 + (A_ContainerSetting*)A_DeafultSetting;
-- (void)addStyle:(A_MultipleViewStyle)style;
-- (void)removeStyle:(A_MultipleViewStyle)style;
+
 - (BOOL)hasStyle:(A_MultipleViewStyle)style;
 - (A_MultipleViewStyle)currentStyle;
 

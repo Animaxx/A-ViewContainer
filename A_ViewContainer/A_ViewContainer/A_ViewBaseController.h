@@ -18,8 +18,7 @@ typedef enum {
 @interface A_ViewBaseController : UIViewController
 
 #pragma mark - Override
-- (void)A_ViewWillAppearInCenter;
-- (void)A_ViewDIdAppearInCenter;
+- (void)A_ViewDidAppearInCenter;
 
 - (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
 - (NSArray *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;

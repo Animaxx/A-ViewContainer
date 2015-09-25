@@ -143,10 +143,7 @@
 }
 
 #pragma mark - Override
-- (void)A_ViewWillAppearInCenter {
-    
-}
-- (void)A_ViewDIdAppearInCenter {
+- (void)A_ViewDidAppearInCenter {
     
 }
 

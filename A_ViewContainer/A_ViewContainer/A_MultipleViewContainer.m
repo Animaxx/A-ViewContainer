@@ -496,15 +496,15 @@ typedef enum {
     switch (_currentOperation) {
         case _containerOperationType_moveToNext: {
             // Stop next to center animation
-            [self setFinalAttrivutes:[[_controllerManager getNext] sideToCenterAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getNextLayer] forKey:@"nextToCenterAnimation"];
+            [self setFinalAttributes:[[_controllerManager getNext] sideToCenterAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getNextLayer] forKey:@"nextToCenterAnimation"];
 
             
             // Stop center to previous animation
             if ([_controllerManager count] > 2) {
-                [self setFinalAttrivutes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getCurrentLayer] forKey:@"centerToPreviousAnimation"];
+                [self setFinalAttributes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getCurrentLayer] forKey:@"centerToPreviousAnimation"];
                 
                 // Stop previous out animation
-                [self setFinalAttrivutes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getPreviousLayer] forKey:@"previousOutAnimation"];
+                [self setFinalAttributes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getPreviousLayer] forKey:@"previousOutAnimation"];
                 ;
                 
                 // Removes previous
@@ -517,13 +517,14 @@ typedef enum {
             [self addController:[_controllerManager getNext] underCurrentView:YES];
             [self clearDisplayLink:YES];
             
+            [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
+             
             CALayer *newNextLayer = [_controllerManager getNextLayer];
             [self setAttrivutes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
-                    [self setFinalAttrivutes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: newNextLayer forKey:@"newNextAnimation"];
-                    [self clearDisplayLink:YES];
+                    [self setFinalAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: newNextLayer forKey:@"newNextAnimation"];
                 }];
                 
                 [self setAnimationAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer forKey:@"newNextAnimation"];
@@ -534,13 +535,13 @@ typedef enum {
             break;
         case _containerOperationType_moveToPrevious: {
             // Stop previous to center animation
-            [self setFinalAttrivutes:[[_controllerManager getPrevious] sideToCenterAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getPreviousLayer] forKey:@"previousToCenterAnimation"];
+            [self setFinalAttributes:[[_controllerManager getPrevious] sideToCenterAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getPreviousLayer] forKey:@"previousToCenterAnimation"];
             
             // Stop center to previous animation
-            [self setFinalAttrivutes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getCurrentLayer] forKey:@"centerToPreviousAnimation"];
+            [self setFinalAttributes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getCurrentLayer] forKey:@"centerToPreviousAnimation"];
             
             // Stop next out animation
-            [self setFinalAttrivutes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getNextLayer] forKey:@"nextOutAnimation"];
+            [self setFinalAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to: [_controllerManager getNextLayer] forKey:@"nextOutAnimation"];
             
             // Remove next
             A_ViewBaseController *outNext = [_controllerManager getNext];
@@ -552,12 +553,14 @@ typedef enum {
             [self addController:[_controllerManager getPrevious] underCurrentView:YES];
             [self clearDisplayLink:YES];
             
+            [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
+            
             CALayer *newPreviousLayer = [_controllerManager getPreviousLayer];
             [self setAttrivutes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
-                    [self setFinalAttrivutes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: newPreviousLayer forKey:@"newPreviousAnimation"];
+                    [self setFinalAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: newPreviousLayer forKey:@"newPreviousAnimation"];
                 }];
 
                 [self setAnimationAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer forKey:@"newPreviousAnimation"];
@@ -684,7 +687,7 @@ typedef enum {
     animationGroup.animations = animations;
     [layer addAnimation:animationGroup forKey:key];
 }
-- (void)setFinalAttrivutes:(NSDictionary *)dictionary to:(CALayer *)layer forKey:(NSString *)key {
+- (void)setFinalAttributes:(NSDictionary *)dictionary to:(CALayer *)layer forKey:(NSString *)key {
     [self setAttrivutes:dictionary to:layer];
     [layer removeAnimationForKey:key];
 }
