@@ -196,8 +196,6 @@ typedef enum {
 @property (strong, nonatomic) A_ControllersManager *controllerManager;
 @property (strong, nonatomic) A_ContainerSetting *setting;
 
-@property (atomic) BOOL needsRefresh;
-
 @property (nonatomic, retain) UIColor *fillColor;
 @property (nonatomic, retain) NSArray *framesToCutOut;
 
@@ -224,19 +222,31 @@ typedef enum {
     NSMutableDictionary *_cacheAnimationAttributes;
 }
 
+- (void)initialize {
+    self.controllerManager = [[A_ControllersManager alloc] init];
+    
+    self.clipsToBounds = YES;
+    self.layer.masksToBounds = YES;
+    self.setting = [A_ContainerSetting A_DeafultSetting];
+    self.translatesAutoresizingMaskIntoConstraints = NO;
+    _isSwitching = NO;
+    _currentOperation = _containerOperationType_noOperation;
+    _cacheAnimationAttributes = [[NSMutableDictionary alloc] init];
+    
+    [self setBackgroundColor:[UIColor clearColor]];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        [self initialize];
+    }
+    return self;
+}
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.controllerManager = [[A_ControllersManager alloc] init];
-        
-        self.clipsToBounds = YES;
-        self.layer.masksToBounds = YES;
-        _isSwitching = NO;
-        _needsRefresh = YES;
-        _currentOperation = _containerOperationType_noOperation;
-        _cacheAnimationAttributes = [[NSMutableDictionary alloc] init];
-        
-        [self setBackgroundColor:[UIColor clearColor]];
+        [self initialize];
     }
     return self;
 }
@@ -270,7 +280,6 @@ typedef enum {
     if (![controller isKindOfClass:[A_ViewBaseController class]]) { return NO; }
     
     [self.controllerManager.subControllers addObject:controller];
-    _needsRefresh = YES;
     return YES;
 }
 - (BOOL)A_AddChildren:(NSArray *)controllers {
@@ -279,16 +288,7 @@ typedef enum {
     }
     
     [self.controllerManager.subControllers addObjectsFromArray:controllers];
-    _needsRefresh = YES;
     return YES;
-}
-
-- (void)drawRect:(CGRect)rect {
-    [super drawRect:rect];
-    
-    if (_needsRefresh) {
-        [self A_Display];
-    }
 }
 
 #pragma mark - disaplying
@@ -306,7 +306,9 @@ typedef enum {
     [self addConstraint:[NSLayoutConstraint constraintWithItem:controller.view attribute:NSLayoutAttributeRight relatedBy:NSLayoutRelationEqual toItem:self attribute:NSLayoutAttributeRight multiplier:1.0f constant:0.f]];
 }
 - (void)A_Display {
-    _needsRefresh = NO;
+    if (self.superview == NO) return;
+    
+    [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
     if ([_controllerManager count] >= 3) {
         [[_controllerManager getPrevious] setInvisible:YES withAnimation:NO];

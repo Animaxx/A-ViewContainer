@@ -18,7 +18,7 @@
 
 @implementation ViewController {
     A_MultipleViewContainer *container;
-    __weak IBOutlet UIView *centerView;
+    __weak IBOutlet A_MultipleViewContainer *centerView;
 }
 
 - (void)viewDidLoad {
@@ -34,14 +34,15 @@
     centerView.layer.borderColor = [UIColor blackColor].CGColor;
     centerView.layer.borderWidth = 1.0f;
     
-    A_ContainerSetting *setting = [A_ContainerSetting A_DeafultSetting];
-    
-    container = [A_MultipleViewContainer A_InstallTo:centerView setting:setting];
-    [container A_AddChild:[DemoLabelViewController createWithNumber:0]];
-    [container A_AddChild:[DemoLabelViewController createWithNumber:1]];
-    [container A_AddChild:[DemoLabelViewController createWithNumber:2]];
-    [container A_AddChild:[DemoLabelViewController createWithNumber:3]];
-    [container A_AddChild:[DemoLabelViewController createWithNumber:4]];
+//    A_ContainerSetting *setting = [A_ContainerSetting A_DeafultSetting];
+//    container = [A_MultipleViewContainer A_InstallTo:centerView setting:setting];
+//    container = [A_MultipleViewContainer A_InstallTo:centerView];
+    [centerView A_AddChild:[DemoLabelViewController createWithNumber:0]];
+    [centerView A_AddChild:[DemoLabelViewController createWithNumber:1]];
+    [centerView A_AddChild:[DemoLabelViewController createWithNumber:2]];
+    [centerView A_AddChild:[DemoLabelViewController createWithNumber:3]];
+    [centerView A_AddChild:[DemoLabelViewController createWithNumber:4]];
+    [centerView A_Display];
 }
 
 
