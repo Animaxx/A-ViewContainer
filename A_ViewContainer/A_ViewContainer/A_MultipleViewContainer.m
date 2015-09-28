@@ -313,7 +313,7 @@ typedef enum {
         [self addController:[_controllerManager getPrevious] underCurrentView:NO];
 
         CALayer *previous = [_controllerManager getPreviousLayer];
-        [self setAttrivutes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:previous];
+        [self setAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:previous];
         
         [[_controllerManager getPrevious] setInvisible:NO withAnimation:YES];
     }
@@ -322,7 +322,7 @@ typedef enum {
         [self addController:[_controllerManager getNext] underCurrentView:NO];
         
         CALayer *next = [_controllerManager getNextLayer];
-        [self setAttrivutes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:next];
+        [self setAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:next];
         
         [[_controllerManager getNext] setInvisible:NO withAnimation:YES];
     }
@@ -520,7 +520,7 @@ typedef enum {
             [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
              
             CALayer *newNextLayer = [_controllerManager getNextLayer];
-            [self setAttrivutes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
+            [self setAttributes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
@@ -556,7 +556,7 @@ typedef enum {
             [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
             
             CALayer *newPreviousLayer = [_controllerManager getPreviousLayer];
-            [self setAttrivutes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer];
+            [self setAttributes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
@@ -688,10 +688,10 @@ typedef enum {
     [layer addAnimation:animationGroup forKey:key];
 }
 - (void)setFinalAttributes:(NSDictionary *)dictionary to:(CALayer *)layer forKey:(NSString *)key {
-    [self setAttrivutes:dictionary to:layer];
+    [self setAttributes:dictionary to:layer];
     [layer removeAnimationForKey:key];
 }
-- (void)setAttrivutes:(NSDictionary *)dictionary to:(CALayer *)layer {
+- (void)setAttributes:(NSDictionary *)dictionary to:(CALayer *)layer {
     for (NSString *key in dictionary) {
         [layer setValue:[dictionary objectForKey:key] forKeyPath:key];
     }

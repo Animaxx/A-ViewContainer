@@ -19,6 +19,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self.labelText setText:[NSString stringWithFormat:@"DEMO %d", _numberTag]];
+    
+//    self.view.layer.cornerRadius = self.view.bounds.size.width / 2.5f;
+    self.view.layer.masksToBounds = YES;
 }
 
 + (DemoLabelViewController *)createWithNumber:(int)number {
@@ -34,11 +37,19 @@
     return controller;
 }
 
+- (NSDictionary<NSString *,id> *)A_ExtraCenterToSideAnimation:(A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary<NSString *,id> *dic = [[NSMutableDictionary alloc] init];
+    [dic setObject:@(self.view.bounds.size.width / 2.5f) forKey:@"cornerRadius"];
+    return dic;
+}
+- (NSDictionary<NSString *,id> *)A_ExtraSideToCenterAnimation:(A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    NSMutableDictionary<NSString *,id> *dic = [[NSMutableDictionary alloc] init];
+    [dic setObject:@(0) forKey:@"cornerRadius"];
+    return dic;
+}
+
 - (void)A_ViewDidAppearInCenter {
     [super A_ViewDidAppearInCenter];
-    
-    self.view.layer.cornerRadius = self.view.bounds.size.width / 2.0f;
-    self.view.layer.masksToBounds = YES;
 }
 
 @end

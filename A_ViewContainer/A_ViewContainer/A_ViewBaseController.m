@@ -103,6 +103,13 @@
             break;
     }
     
+    NSDictionary *extraAnimation = [self A_ExtraCenterToSideAnimation:setting direction:direction];
+    if (extraAnimation && extraAnimation.count > 0) {
+        for (NSString *key in extraAnimation) {
+            [animationSet setObject:[extraAnimation objectForKey:key] forKey:key];
+        }
+    }
+    
     return animationSet;
 }
 - (NSDictionary *)sideToCenterAttributes: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
@@ -111,6 +118,13 @@
     [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
     [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfCurrent, setting.scaleOfCurrent, 1)] forKey:@"transform"];
 //    [animationSet setObject:[NSValue valueWithCGPoint:self.view.layer.position] forKey:@"position"];
+    
+    NSDictionary *extraAnimation = [self A_ExtraSideToCenterAnimation:setting direction:direction];
+    if (extraAnimation && extraAnimation.count > 0) {
+        for (NSString *key in extraAnimation) {
+            [animationSet setObject:[extraAnimation objectForKey:key] forKey:key];
+        }
+    }
     
     return animationSet;
 }
@@ -129,17 +143,24 @@
     }
     [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
     
+    NSDictionary *extraAnimation = [self A_ExtraSideToOutAnimation:setting direction:direction];
+    if (extraAnimation && extraAnimation.count > 0) {
+        for (NSString *key in extraAnimation) {
+            [animationSet setObject:[extraAnimation objectForKey:key] forKey:key];
+        }
+    }
+    
     return animationSet;
 }
 
-- (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
-    return @[];
+- (NSDictionary<NSString *, id> *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    return @{};
 }
-- (NSArray *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
-    return @[];
+- (NSDictionary<NSString *, id> *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    return @{};
 }
-- (NSArray *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
-    return @[];
+- (NSDictionary<NSString *, id> *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction {
+    return @{};
 }
 
 #pragma mark - Override
