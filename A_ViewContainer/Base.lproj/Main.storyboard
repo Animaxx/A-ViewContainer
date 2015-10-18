@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="8191" systemVersion="15A284" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
@@ -14,29 +14,46 @@
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qub-Td-jcN" customClass="A_MultipleViewContainer">
-                                <rect key="frame" x="20" y="10" width="560" height="510"/>
+                                <rect key="frame" x="20" y="10" width="374" height="646"/>
+                                <animations/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Huf-iw-Rpz">
+                                <rect key="frame" x="160" y="698" width="94" height="30"/>
+                                <animations/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="94" id="Hfv-vX-egS"/>
+                                    <constraint firstAttribute="height" constant="30" id="LLz-O6-g3M"/>
+                                </constraints>
+                                <state key="normal" title="Next example"/>
+                                <connections>
+                                    <segue destination="ZWO-dD-m95" kind="show" id="xON-AJ-6sZ"/>
+                                </connections>
+                            </button>
                         </subviews>
+                        <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="qub-Td-jcN" secondAttribute="bottom" constant="80" id="6oD-zD-m84"/>
+                            <constraint firstItem="Huf-iw-Rpz" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="EYj-RL-Lzd"/>
                             <constraint firstAttribute="trailing" secondItem="qub-Td-jcN" secondAttribute="trailing" constant="20" id="Jlx-jA-qiO"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Huf-iw-Rpz" secondAttribute="bottom" constant="8" id="Va9-cp-IMQ"/>
                             <constraint firstItem="qub-Td-jcN" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="10" id="igc-lq-REg"/>
                             <constraint firstItem="qub-Td-jcN" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="20" id="ynt-KY-7K6"/>
                         </constraints>
                     </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>
                         <outlet property="centerView" destination="qub-Td-jcN" id="3ux-7P-RX8"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="637" y="294"/>
+            <point key="canvasLocation" x="841" y="249"/>
         </scene>
         <!--Demo Label View Controller-->
         <scene sceneID="L3V-p1-TCt">
@@ -47,11 +64,12 @@
                         <viewControllerLayoutGuide type="bottom" id="XGy-7q-TBm"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="C3h-6u-2Ax">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ulk-y3-Tha">
-                                <rect key="frame" x="266" y="120" width="68" height="21.5"/>
+                                <rect key="frame" x="173" y="120.5" width="68" height="21.5"/>
+                                <animations/>
                                 <attributedString key="attributedText">
                                     <fragment content="Demo X">
                                         <attributes>
@@ -64,19 +82,41 @@
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
+                        <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="centerX" secondItem="ulk-y3-Tha" secondAttribute="centerX" id="Juo-gl-jOl"/>
                             <constraint firstItem="ulk-y3-Tha" firstAttribute="top" secondItem="gpf-Pb-K0J" secondAttribute="bottom" constant="100" id="xrF-Ft-ZMG"/>
                         </constraints>
                     </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
                     <connections>
                         <outlet property="labelText" destination="ulk-y3-Tha" id="JB9-aC-Xy0"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="DoE-8s-qOr" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1277" y="294"/>
+            <point key="canvasLocation" x="1317" y="249"/>
+        </scene>
+        <!--View Controller Programmatic-->
+        <scene sceneID="42U-lI-LFp">
+            <objects>
+                <viewController id="ZWO-dD-m95" customClass="ViewControllerProgrammatic" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="VA6-kH-J3m"/>
+                        <viewControllerLayoutGuide type="bottom" id="PHr-dK-kEV"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Azr-rC-8Ku">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <animations/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Eil-bn-KK0" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1317" y="1133"/>
         </scene>
     </scenes>
 </document>

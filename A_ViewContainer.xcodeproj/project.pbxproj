@@ -16,6 +16,8 @@
 		692ED1FF1B64132D00E29E02 /* A_ViewBaseController.m in Sources */ = {isa = PBXBuildFile; fileRef = 692ED1FE1B64132D00E29E02 /* A_ViewBaseController.m */; };
 		692ED2031B649F0600E29E02 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 692ED2021B649F0600E29E02 /* ViewController.m */; };
 		692ED2061B649F5200E29E02 /* DemoLabelViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 692ED2051B649F5200E29E02 /* DemoLabelViewController.m */; };
+		757572401BD3B0CF00A71B02 /* ViewControllerProgrammatic.m in Sources */ = {isa = PBXBuildFile; fileRef = 7575723F1BD3B0CF00A71B02 /* ViewControllerProgrammatic.m */; settings = {ASSET_TAGS = (); }; };
+		757572431BD3B20D00A71B02 /* DemoLabelViewControllerShadow.m in Sources */ = {isa = PBXBuildFile; fileRef = 757572421BD3B20D00A71B02 /* DemoLabelViewControllerShadow.m */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +37,10 @@
 		692ED2021B649F0600E29E02 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewController.m; path = Example/ViewController.m; sourceTree = "<group>"; };
 		692ED2041B649F5200E29E02 /* DemoLabelViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DemoLabelViewController.h; path = Example/DemoLabelViewController.h; sourceTree = "<group>"; };
 		692ED2051B649F5200E29E02 /* DemoLabelViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DemoLabelViewController.m; path = Example/DemoLabelViewController.m; sourceTree = "<group>"; };
+		7575723E1BD3B0CF00A71B02 /* ViewControllerProgrammatic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewControllerProgrammatic.h; path = Example/ViewControllerProgrammatic.h; sourceTree = "<group>"; };
+		7575723F1BD3B0CF00A71B02 /* ViewControllerProgrammatic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewControllerProgrammatic.m; path = Example/ViewControllerProgrammatic.m; sourceTree = "<group>"; };
+		757572411BD3B20D00A71B02 /* DemoLabelViewControllerShadow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DemoLabelViewControllerShadow.h; path = Example/DemoLabelViewControllerShadow.h; sourceTree = "<group>"; };
+		757572421BD3B20D00A71B02 /* DemoLabelViewControllerShadow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DemoLabelViewControllerShadow.m; path = Example/DemoLabelViewControllerShadow.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				692ED2001B649EC900E29E02 /* Example */,
+				757572441BD3B2A500A71B02 /* Example Programmatic */,
 				692ED1FC1B6412C900E29E02 /* A_ViewContainer */,
 				692ED1D71B64123C00E29E02 /* AppDelegate.h */,
 				692ED1D81B64123C00E29E02 /* AppDelegate.m */,
@@ -108,6 +115,17 @@
 				692ED2051B649F5200E29E02 /* DemoLabelViewController.m */,
 			);
 			name = Example;
+			sourceTree = "<group>";
+		};
+		757572441BD3B2A500A71B02 /* Example Programmatic */ = {
+			isa = PBXGroup;
+			children = (
+				7575723E1BD3B0CF00A71B02 /* ViewControllerProgrammatic.h */,
+				7575723F1BD3B0CF00A71B02 /* ViewControllerProgrammatic.m */,
+				757572411BD3B20D00A71B02 /* DemoLabelViewControllerShadow.h */,
+				757572421BD3B20D00A71B02 /* DemoLabelViewControllerShadow.m */,
+			);
+			name = "Example Programmatic";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -184,7 +202,9 @@
 				692ED1FF1B64132D00E29E02 /* A_ViewBaseController.m in Sources */,
 				692ED1FB1B6412C200E29E02 /* A_MultipleViewContainer.m in Sources */,
 				692ED1D91B64123C00E29E02 /* AppDelegate.m in Sources */,
+				757572431BD3B20D00A71B02 /* DemoLabelViewControllerShadow.m in Sources */,
 				692ED2061B649F5200E29E02 /* DemoLabelViewController.m in Sources */,
+				757572401BD3B0CF00A71B02 /* ViewControllerProgrammatic.m in Sources */,
 				692ED1D61B64123C00E29E02 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
