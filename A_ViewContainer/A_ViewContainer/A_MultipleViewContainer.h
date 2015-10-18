@@ -21,10 +21,12 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 @interface A_ContainerSetting: NSObject
 
 // Scale the center controller, if set it toz 1.0f means fill cover the view. Default value is .8f
-@property (nonatomic) CGFloat scaleOfCurrent;
+@property (nonatomic) CGFloat scaleOfCurrentX;
+@property (nonatomic) CGFloat scaleOfCurrentY;
 
 // Scale the previous and next controller. Default value is .4f
-@property (nonatomic) CGFloat scaleOfEdge;
+@property (nonatomic) CGFloat scaleOfEdgeX;
+@property (nonatomic) CGFloat scaleOfEdgeY;
 
 // Displacement of side view, lesser value means closer to the center. Default is 1.0f
 @property (nonatomic) CGFloat sideDisplacement;
@@ -33,7 +35,7 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 
 - (BOOL)hasStyle:(A_MultipleViewStyle)style;
 - (A_MultipleViewStyle)currentStyle;
-
+- (void)addStyle:(A_MultipleViewStyle)style;
 @end
 
 

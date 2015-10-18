@@ -73,14 +73,14 @@
             [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f + setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
             
             if ([setting hasStyle:A_MultipleViewStyleRotate]) {
-                CATransform3D transform = CATransform3DMakeScale(profileEdgeZoomRate(setting.scaleOfEdge), profileEdgeZoomRate(setting.scaleOfEdge), 1);
+                CATransform3D transform = CATransform3DMakeScale(profileEdgeZoomRate(setting.scaleOfEdgeX), profileEdgeZoomRate(setting.scaleOfEdgeY), 1);
                 transform = CATransform3DRotate(transform, profileEdgeRotateAngle, 0.0, 1.0, 0);
                 transform = CATransform3DPerspect(transform, CGPointMake(0, 0), perspectDistance);
                 
                 [animationSet setObject:[NSValue valueWithCATransform3D:transform] forKey:@"transform"];
 //                [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(self.view.layer.position.x - (self.view.layer.bounds.size.width / 2.8), self.view.layer.position.y)] forKey:@"position"];
             } else {
-                [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+                [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdgeX, setting.scaleOfEdgeY, 1)] forKey:@"transform"];
             }
         }
             break;
@@ -88,14 +88,14 @@
             [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f - setting.sideDisplacement, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
             
             if ([setting hasStyle:A_MultipleViewStyleRotate]) {
-                CATransform3D transform = CATransform3DMakeScale(profileEdgeZoomRate(setting.scaleOfEdge), profileEdgeZoomRate(setting.scaleOfEdge), 1);
+                CATransform3D transform = CATransform3DMakeScale(profileEdgeZoomRate(setting.scaleOfEdgeX), profileEdgeZoomRate(setting.scaleOfEdgeY), 1);
                 transform = CATransform3DRotate(transform, -(profileEdgeRotateAngle), 0.0, 1.0, 0);
                 transform = CATransform3DPerspect(transform, CGPointMake(0, 0), perspectDistance);
                 
                 [animationSet setObject:[NSValue valueWithCATransform3D:transform] forKey:@"transform"];
 //                [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(self.view.layer.position.x + (self.view.layer.bounds.size.width / 2.8), self.view.layer.position.y)] forKey:@"position"];
             } else {
-                [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+                [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdgeX, setting.scaleOfEdgeY, 1)] forKey:@"transform"];
             }
         }
             break;
@@ -116,7 +116,7 @@
     NSMutableDictionary *animationSet = [[NSMutableDictionary alloc] init];
 
     [animationSet setObject:[NSValue valueWithCGPoint:CGPointMake(0.5f, self.view.layer.anchorPoint.y)] forKey:@"anchorPoint"];
-    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfCurrent, setting.scaleOfCurrent, 1)] forKey:@"transform"];
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfCurrentX, setting.scaleOfCurrentY, 1)] forKey:@"transform"];
 //    [animationSet setObject:[NSValue valueWithCGPoint:self.view.layer.position] forKey:@"position"];
     
     NSDictionary *extraAnimation = [self A_ExtraSideToCenterAnimation:setting direction:direction];
@@ -141,7 +141,7 @@
         default:
             break;
     }
-    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdge, setting.scaleOfEdge, 1)] forKey:@"transform"];
+    [animationSet setObject:[NSValue valueWithCATransform3D:CATransform3DMakeScale(setting.scaleOfEdgeX, setting.scaleOfEdgeY, 1)] forKey:@"transform"];
     
     NSDictionary *extraAnimation = [self A_ExtraSideToOutAnimation:setting direction:direction];
     if (extraAnimation && extraAnimation.count > 0) {
