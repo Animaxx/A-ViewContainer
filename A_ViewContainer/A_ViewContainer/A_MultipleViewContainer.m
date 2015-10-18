@@ -151,8 +151,10 @@ typedef enum {
 
 + (A_ContainerSetting*)A_DeafultSetting{
     A_ContainerSetting *setting = [[A_ContainerSetting alloc] init];
-    setting.scaleOfCurrent = .8f;
-    setting.scaleOfEdge = .4f;
+    setting.scaleOfCurrentX = .8f;
+    setting.scaleOfCurrentY = .8f;
+    setting.scaleOfEdgeX = .4f;
+    setting.scaleOfEdgeY = .4f;
     setting.sideDisplacement = 1.0f;
     
     return setting;
@@ -334,7 +336,7 @@ typedef enum {
         
         [self bringSubviewToFront:[_controllerManager getCurrent].view];
         
-        [_controllerManager getCurrent].view.layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
+        [_controllerManager getCurrent].view.layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrentX, _setting.scaleOfCurrentY, 1);
         
         [[_controllerManager getCurrent] setInvisible:NO withAnimation:YES];
     }
