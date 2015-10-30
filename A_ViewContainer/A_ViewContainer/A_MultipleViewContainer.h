@@ -11,7 +11,7 @@
 
 typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
     A_MultipleViewStyleNothing          = 0,
-    A_MultipleViewStyleBounce        = 1 << 1,
+    A_MultipleViewStyleBounce           = 1 << 1,
     A_MultipleViewStyleBlur             = 1 << 2,
     A_MultipleViewStyleRotate           = 1 << 3,
     A_MultipleViewStyleExplode          = 1 << 4,
@@ -28,6 +28,9 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 
 // Displacement of side view, lesser value means closer to the center. Default is 1.0f
 @property (nonatomic) CGFloat sideDisplacement;
+
+// Transparence of side view. Default is 0.3f
+@property (nonatomic) CGFloat sideTransparence;
 
 + (A_ContainerSetting*)A_DeafultSetting;
 

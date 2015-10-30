@@ -20,8 +20,8 @@ typedef enum {
 #pragma mark - Override
 - (void)A_ViewDidAppearInCenter;
 
-- (NSDictionary<NSString *, id> *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
-- (NSDictionary<NSString *, id> *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
-- (NSDictionary<NSString *, id> *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
+- (NSArray *)A_ExtraCenterToSideAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
+- (NSArray *)A_ExtraSideToCenterAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
+- (NSArray *)A_ExtraSideToOutAnimation: (A_ContainerSetting *)setting direction:(A_ControllerDirectionEnum)direction;
 
 @end
