@@ -332,32 +332,23 @@ typedef enum {
     }
     
     if ([_controllerManager count] >= 3) {
-        [[_controllerManager getPrevious] setInvisible:YES withAnimation:NO];
         [self addController:[_controllerManager getPrevious] underCurrentView:NO];
-        
+
         CALayer *previous = [_controllerManager getPreviousLayer];
-        [self setAttrivutes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:previous];
-        
-        [[_controllerManager getPrevious] setInvisible:NO withAnimation:YES];
+        [self setAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:previous];
     }
     if ([_controllerManager count] >= 2) {
-        [[_controllerManager getNext] setInvisible:YES withAnimation:NO];
         [self addController:[_controllerManager getNext] underCurrentView:NO];
         
         CALayer *next = [_controllerManager getNextLayer];
-        [self setAttrivutes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:next];
-        
-        [[_controllerManager getNext] setInvisible:NO withAnimation:YES];
+        [self setAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:next];
     }
     if ([_controllerManager count] >= 1) {
-        [[_controllerManager getCurrent] setInvisible:YES withAnimation:NO];
         [self addController:[_controllerManager getCurrent] underCurrentView:NO];
         
         [self bringSubviewToFront:[_controllerManager getCurrent].view];
         
         [_controllerManager getCurrent].view.layer.transform = CATransform3DMakeScale(_setting.scaleOfCurrent, _setting.scaleOfCurrent, 1);
-        
-        [[_controllerManager getCurrent] setInvisible:NO withAnimation:YES];
     }
     
     [self layoutIfNeeded];
@@ -406,11 +397,11 @@ typedef enum {
     // Previous to center animation
     CALayer *previous = [_controllerManager getPreviousLayer];
     [self setAnimationAttributes:[[_controllerManager getPrevious] sideToCenterAttributes:_setting direction:A_ControllerDirectionToRight] to:previous forKey:@"previousToCenterAnimation"];
-    
+
     // Center to next
     CALayer *current = [_controllerManager getCurrentLayer];
     [self setAnimationAttributes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:current forKey:@"centerToNextAnimation"];
-    
+
     // Next out
     CALayer *next = [_controllerManager getNextLayer];
     [self setAnimationAttributes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:next forKey:@"nextOutAnimation"];
@@ -520,7 +511,7 @@ typedef enum {
         case _containerOperationType_moveToNext: {
             // Stop next to center animation
             [self setFinalAttributes:[[_controllerManager getNext] sideToCenterAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getNextLayer] forKey:@"nextToCenterAnimation"];
-            
+
             
             // Stop center to previous animation
             if ([_controllerManager count] > 2) {
@@ -541,9 +532,9 @@ typedef enum {
             [self clearDisplayLink:YES];
             
             [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
-            
+             
             CALayer *newNextLayer = [_controllerManager getNextLayer];
-            [self setAttrivutes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
+            [self setAttributes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
@@ -569,7 +560,7 @@ typedef enum {
             // Remove next
             A_ViewBaseController *outNext = [_controllerManager getNext];
             [outNext.view removeFromSuperview];
-            
+
             
             // Bring new previous controller
             [_controllerManager naviageToPrevious];
@@ -579,13 +570,13 @@ typedef enum {
             [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
             
             CALayer *newPreviousLayer = [_controllerManager getPreviousLayer];
-            [self setAttrivutes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer];
+            [self setAttributes:[[_controllerManager getPrevious] sideToOutAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer];
             
             [CATransaction begin]; {
                 [CATransaction setCompletionBlock:^{
                     [self setFinalAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: newPreviousLayer forKey:@"newPreviousAnimation"];
                 }];
-                
+
                 [self setAnimationAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer forKey:@"newPreviousAnimation"];
                 newPreviousLayer.speed = 6.0f;
             }
@@ -624,16 +615,16 @@ typedef enum {
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
     if (!_isSwitching) return;
-    
+
     CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
     if (movingDistance <=0) return;
     
     CGFloat halfWidth = [self getHalfWidth];
-    //    if (movingDistance > halfWidth) {
-    //        [self forwardAnimation];
-    //        _isSwitching = NO;
-    //        return;
-    //    }
+//    if (movingDistance > halfWidth) {
+//        [self forwardAnimation];
+//        _isSwitching = NO;
+//        return;
+//    }
     
     CALayer *next = [_controllerManager getNextLayer];
     CALayer *current = [_controllerManager getCurrentLayer];
@@ -711,10 +702,10 @@ typedef enum {
     [layer addAnimation:animationGroup forKey:key];
 }
 - (void)setFinalAttributes:(NSDictionary *)dictionary to:(CALayer *)layer forKey:(NSString *)key {
-    [self setAttrivutes:dictionary to:layer];
+    [self setAttributes:dictionary to:layer];
     [layer removeAnimationForKey:key];
 }
-- (void)setAttrivutes:(NSDictionary *)dictionary to:(CALayer *)layer {
+- (void)setAttributes:(NSDictionary *)dictionary to:(CALayer *)layer {
     for (NSString *key in dictionary) {
         [layer setValue:[dictionary objectForKey:key] forKeyPath:key];
     }
@@ -732,8 +723,8 @@ typedef enum {
         }
     }
     return 0;
-    //    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
-    //        point.y <= height * 0.9f && point.y >= height * 0.1f ;
+//    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
+//        point.y <= height * 0.9f && point.y >= height * 0.1f ;
 }
 
 #pragma mark - Bounce animation
@@ -802,7 +793,7 @@ typedef double(^viewContainerKeyframeCalculatingBlock)(double t, double b, doubl
 }
 -(NSArray*)_getPointValues:(NSInteger)steps Start:(CGPoint)start End:(CGPoint)end {
     viewContainerKeyframeCalculatingBlock _calculatingBlock = [self _keyframeBlock];
-    
+
     NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
     
     double _v = 0.0;
@@ -910,3 +901,7 @@ typedef double(^viewContainerKeyframeCalculatingBlock)(double t, double b, doubl
 
 
 @end
+
+
+
+
