@@ -464,7 +464,7 @@ typedef enum {
     _currentOperation = _containerOperationType_moveToPrevious;
     
     // Bring the next view to the front
-    [self bringSubviewToFront:[_controllerManager getNext].view];
+    [self bringSubviewToFront:[_controllerManager getPrevious].view];
     
     // Previous to center animation
     CALayer *previous = [_controllerManager getPreviousLayer];
