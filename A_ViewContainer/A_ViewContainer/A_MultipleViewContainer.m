@@ -142,6 +142,23 @@ typedef enum {
     }
 }
 
+- (BOOL)removeController: (A_ViewBaseController *)controller {
+    if ([self.subControllers containsObject:controller]) {
+        A_ViewBaseController *current = [self getCurrent];
+        if (controller == current) {
+            _currectIndex = 0;
+            [self.subControllers removeObject:controller];
+        } else {
+            [self.subControllers removeObject:controller];
+            _currectIndex = [self.subControllers indexOfObject:current];
+        }
+        
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
 @end
 
 #pragma mark - Container setting
@@ -276,6 +293,28 @@ typedef enum {
     return self;
 }
 
+- (void)dealloc {
+    if (reverseDisplaylink) {
+        [reverseDisplaylink invalidate];
+        reverseDisplaylink = nil;
+    }
+    
+    if (forwardDisplaylink) {
+        [forwardDisplaylink invalidate];
+        forwardDisplaylink = nil;
+    }
+}
+
+- (void)A_CleanAllSwitchedEvents {
+    [_selectors removeAllObjects];
+}
+- (void)A_CleanAllControllers {
+    [self.controllerManager.subControllers removeAllObjects];
+    
+    self.controllerManager = nil;
+    self.controllerManager = [[A_ControllersManager alloc] init];
+}
+
 - (void)commonInit {
     self.controllerManager = [[A_ControllersManager alloc] init];
     _selectors = [[NSMutableArray alloc] init];
@@ -355,6 +394,11 @@ typedef enum {
     _needsRefresh = YES;
     return YES;
 }
+- (BOOL)A_RemoveChild:(A_ViewBaseController *)controller {
+    if (![controller isKindOfClass:[A_ViewBaseController class]]) { return NO; }
+    
+    return [self.controllerManager removeController:controller];
+}
 
 - (void)drawRect:(CGRect)rect {
     [super drawRect:rect];
@@ -402,13 +446,13 @@ typedef enum {
     }
     
     if ([_controllerManager count] >= 3) {
-        [self addController:[_controllerManager getPrevious] underCurrentView:NO];
-        
+        [self addController:[_controllerManager getPrevious] underCurrentView:YES];
+
         CALayer *previous = [_controllerManager getPreviousLayer];
         [self setAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:previous];
     }
     if ([_controllerManager count] >= 2) {
-        [self addController:[_controllerManager getNext] underCurrentView:NO];
+        [self addController:[_controllerManager getNext] underCurrentView:YES];
         
         CALayer *next = [_controllerManager getNextLayer];
         [self setAttributes:[[_controllerManager getNext] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:next];
@@ -469,11 +513,11 @@ typedef enum {
     // Previous to center animation
     CALayer *previous = [_controllerManager getPreviousLayer];
     [self setAnimationAttributes:[[_controllerManager getPrevious] sideToCenterAttributes:_setting direction:A_ControllerDirectionToRight] to:previous forKey:@"previousToCenterAnimation"];
-    
+
     // Center to next
     CALayer *current = [_controllerManager getCurrentLayer];
     [self setAnimationAttributes:[[_controllerManager getCurrent] centerToSideAttributes:_setting direction:A_ControllerDirectionToRight] to:current forKey:@"centerToNextAnimation"];
-    
+
     // Next out
     CALayer *next = [_controllerManager getNextLayer];
     [self setAnimationAttributes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:next forKey:@"nextOutAnimation"];
@@ -583,7 +627,7 @@ typedef enum {
         case _containerOperationType_moveToNext: {
             // Stop next to center animation
             [self setFinalAttributes:[[_controllerManager getNext] sideToCenterAttributes:_setting direction:A_ControllerDirectionToLeft] to: [_controllerManager getNextLayer] forKey:@"nextToCenterAnimation"];
-            
+
             
             // Stop center to previous animation
             if ([_controllerManager count] > 2) {
@@ -604,7 +648,7 @@ typedef enum {
             [self clearDisplayLink:YES];
             
             [[_controllerManager getCurrent] A_ViewDidAppearInCenter];
-            
+             
             CALayer *newNextLayer = [_controllerManager getNextLayer];
             [self setAttributes:[[_controllerManager getNext] sideToOutAttributes:_setting direction:A_ControllerDirectionToRight] to:newNextLayer];
             
@@ -632,7 +676,7 @@ typedef enum {
             // Remove next
             A_ViewBaseController *outNext = [_controllerManager getNext];
             [outNext.view removeFromSuperview];
-            
+
             
             // Bring new previous controller
             [_controllerManager naviageToPrevious];
@@ -648,7 +692,7 @@ typedef enum {
                 [CATransaction setCompletionBlock:^{
                     [self setFinalAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to: newPreviousLayer forKey:@"newPreviousAnimation"];
                 }];
-                
+
                 [self setAnimationAttributes:[[_controllerManager getPrevious] centerToSideAttributes:_setting direction:A_ControllerDirectionToLeft] to:newPreviousLayer forKey:@"newPreviousAnimation"];
                 newPreviousLayer.speed = 6.0f;
             }
@@ -698,16 +742,16 @@ typedef enum {
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
     if (!_isSwitching) return;
-    
+
     CGFloat movingDistance = fabs(_startTouchPoint.x - [[touches anyObject] locationInView: self].x);
     if (movingDistance <=0) return;
     
     CGFloat halfWidth = [self getHalfWidth];
-    //    if (movingDistance > halfWidth) {
-    //        [self forwardAnimation];
-    //        _isSwitching = NO;
-    //        return;
-    //    }
+//    if (movingDistance > halfWidth) {
+//        [self forwardAnimation];
+//        _isSwitching = NO;
+//        return;
+//    }
     
     CALayer *next = [_controllerManager getNextLayer];
     CALayer *current = [_controllerManager getCurrentLayer];
@@ -806,8 +850,8 @@ typedef enum {
         }
     }
     return 0;
-    //    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
-    //        point.y <= height * 0.9f && point.y >= height * 0.1f ;
+//    return (point.x <= [self getRecognisingEdgeWidth] || point.x >= ([self getCurrentWidth] - [self getRecognisingEdgeWidth])) &&
+//        point.y <= height * 0.9f && point.y >= height * 0.1f ;
 }
 
 #pragma mark - Bounce animation
@@ -876,7 +920,7 @@ typedef double(^viewContainerKeyframeCalculatingBlock)(double t, double b, doubl
 }
 -(NSArray*)_getPointValues:(NSInteger)steps Start:(CGPoint)start End:(CGPoint)end {
     viewContainerKeyframeCalculatingBlock _calculatingBlock = [self _keyframeBlock];
-    
+
     NSMutableArray* _values = [[NSMutableArray alloc] initWithCapacity:steps];
     
     double _v = 0.0;

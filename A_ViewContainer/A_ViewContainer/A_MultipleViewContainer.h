@@ -56,9 +56,14 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 
 - (BOOL)A_AddChild:(A_ViewBaseController *)controller;
 - (BOOL)A_AddChildren:(NSArray *)controllers;
+- (BOOL)A_RemoveChild:(A_ViewBaseController *)controller;
 
 - (void)A_Display;
+- (void)A_CleanAllSwitchedEvents;
+- (void)A_CleanAllControllers;
 
 - (void)A_AddSwitchedEvent:(SEL)selector owner:(id)selOwner;
+- (void)A_RemoveSwitchedEvent:(id)selOwner;
+
 
 @end
