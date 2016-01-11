@@ -32,6 +32,8 @@ typedef NS_OPTIONS(NSUInteger, A_MultipleViewStyle)  {
 // Transparence of side view. Default is 0.5f
 @property (nonatomic) CGFloat sideTransparence;
 
+@property (nonatomic) BOOL enableInCardRecognizer;
+
 + (A_ContainerSetting*)A_DeafultSetting;
 
 - (BOOL)hasStyle:(A_MultipleViewStyle)style;

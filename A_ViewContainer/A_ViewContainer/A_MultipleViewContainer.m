@@ -172,6 +172,7 @@ typedef enum {
     setting.scaleOfEdge = .4f;
     setting.sideDisplacement = 1.0f;
     setting.sideTransparence = 0.5f;
+    setting.enableInCardRecognizer = YES;
     
     return setting;
 }
@@ -263,6 +264,9 @@ typedef enum {
     NSMutableDictionary *_switchedCallbackSelector;
     
     NSMutableArray <multipleContainerSelectorModel *>* _selectors;
+    
+    UISwipeGestureRecognizer *swipeRightRecognizer;
+    UISwipeGestureRecognizer *swipeLeftRecognizer;
 }
 
 @dynamic subControlers;
@@ -293,6 +297,9 @@ typedef enum {
     return self;
 }
 
+//- (void)awakeFromNib {
+//    [super awakeFromNib];
+//}
 - (void)dealloc {
     if (reverseDisplaylink) {
         [reverseDisplaylink invalidate];
@@ -329,6 +336,17 @@ typedef enum {
     _setting = [A_ContainerSetting A_DeafultSetting];
     
     [self setBackgroundColor:[UIColor clearColor]];
+}
+
+- (void)handleSwipeRight:(UISwipeGestureRecognizer *)gestureRecognizer {
+    if (_isSwitching) return;
+    [self moveToPrevious];
+    [self forwardAnimation];
+}
+- (void)handleSwipeLeft:(UISwipeGestureRecognizer *)gestureRecognizer {
+    if (_isSwitching) return;
+    [self moveToNext];
+    [self forwardAnimation];
 }
 
 + (A_MultipleViewContainer *)A_InstallTo:(UIView *)container {
@@ -379,7 +397,7 @@ typedef enum {
 }
 
 - (BOOL)A_AddChild:(A_ViewBaseController *)controller {
-    if (![controller isKindOfClass:[A_ViewBaseController class]]) { return NO; }
+    if (!controller || ![controller isKindOfClass:[A_ViewBaseController class]]) { return NO; }
     
     [self.controllerManager.subControllers addObject:controller];
     _needsRefresh = YES;
@@ -579,17 +597,17 @@ typedef enum {
     }
     
     if (next.timeOffset < 1.0f) {
-        next.timeOffset += 0.034;
+        next.timeOffset += 0.1;
     } else {
         next.timeOffset = 1.0f;
     }
     if (current.timeOffset < 1.0f) {
-        current.timeOffset += 0.034;
+        current.timeOffset += 0.1;
     } else {
         current.timeOffset = 1.0f;
     }
     if (previous.timeOffset < 1.0f) {
-        previous.timeOffset += 0.034;
+        previous.timeOffset += 0.1;
     }else {
         previous.timeOffset = 1.0f;
     }
@@ -643,6 +661,8 @@ typedef enum {
             }
             
             // Bring new next controller
+            [[_controllerManager getCurrent] A_ViewDidMoveToSide];
+            
             [_controllerManager navigateToNext];
             [self addController:[_controllerManager getNext] underCurrentView:YES];
             [self clearDisplayLink:YES];
@@ -679,6 +699,8 @@ typedef enum {
 
             
             // Bring new previous controller
+            [[_controllerManager getCurrent] A_ViewDidMoveToSide];
+            
             [_controllerManager naviageToPrevious];
             [self addController:[_controllerManager getPrevious] underCurrentView:YES];
             [self clearDisplayLink:YES];
@@ -708,6 +730,23 @@ typedef enum {
 }
 
 - (void)callSwitchedEvents {
+    [[_controllerManager getPrevious].view removeGestureRecognizer:swipeRightRecognizer];
+    [[_controllerManager getPrevious].view removeGestureRecognizer:swipeLeftRecognizer];
+    [[_controllerManager getNext].view removeGestureRecognizer:swipeRightRecognizer];
+    [[_controllerManager getNext].view removeGestureRecognizer:swipeLeftRecognizer];
+    
+    if (!swipeRightRecognizer) {
+        swipeRightRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeRight:)];
+        swipeRightRecognizer.direction = UISwipeGestureRecognizerDirectionRight;
+    }
+    [[_controllerManager getCurrent].view addGestureRecognizer:swipeRightRecognizer];
+    
+    if (!swipeLeftRecognizer) {
+        swipeLeftRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipeLeft:)];
+        swipeLeftRecognizer.direction = UISwipeGestureRecognizerDirectionLeft;
+    }
+    [[_controllerManager getCurrent].view addGestureRecognizer:swipeLeftRecognizer];
+    
     // Call the switched event
     for (multipleContainerSelectorModel *item in _selectors) {
         if (item.selOwner && [item.selOwner respondsToSelector:item.selector]) {

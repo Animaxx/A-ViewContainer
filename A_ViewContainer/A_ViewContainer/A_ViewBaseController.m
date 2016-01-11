@@ -144,7 +144,10 @@
 
 #pragma mark - Override
 - (void)A_ViewDidAppearInCenter {
-    
+    self.view.userInteractionEnabled = true;
+}
+- (void)A_ViewDidMoveToSide {
+    self.view.userInteractionEnabled = false;
 }
 
 #pragma mark - Animation function
