@@ -750,7 +750,9 @@ typedef enum {
     // Call the switched event
     for (multipleContainerSelectorModel *item in _selectors) {
         if (item.selOwner && [item.selOwner respondsToSelector:item.selector]) {
-            [item.selOwner performSelector:item.selector withObject:self];
+            
+//            [item.selOwner performSelector:item.selector withObject:self];
+            ((void (*)(id, SEL))[self methodForSelector:item.selector])(self, item.selector);
         }
     }
 }
